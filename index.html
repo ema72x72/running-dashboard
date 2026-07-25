@@ -92,7 +92,13 @@ table.cmp .delta-pos { color: #0f6e56; }
 table.cmp .delta-neg { color: #a32d2d; }
 .note { font-size: 11px; color: var(--text-muted); margin: -0.75rem 0 1.5rem; }
 
-#mapContainer { width: 100%; height: 420px; border-radius: var(--radius); overflow: hidden; }
+#mapContainer { width: 100%; height: 460px; border-radius: var(--radius); overflow: hidden; }
+.maptoolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 10px; }
+.mapmode { display:inline-flex; padding:3px; border-radius:999px; background:var(--surface-1); border:1px solid var(--border); }
+.mapmodebtn { border:0; background:transparent; color:var(--text-secondary); padding:7px 12px; border-radius:999px; font:inherit; font-size:12px; cursor:pointer; }
+.mapmodebtn.active { background:var(--surface-2); color:var(--text-primary); box-shadow:0 1px 3px rgba(0,0,0,.12); font-weight:500; }
+.maplegend { display:flex; align-items:center; gap:7px; font-size:11px; color:var(--text-muted); white-space:nowrap; }
+.heatbar { width:76px; height:8px; border-radius:999px; background:linear-gradient(90deg,#2a78d6,#34d399,#fbbf24,#fb923c,#e34948); }
 .popuprun { font-size: 12px; line-height: 1.5; }
 .popuprun b { font-size: 13px; }
 
@@ -199,7 +205,19 @@ table.cmp .delta-neg { color: #a32d2d; }
   </section>
 
   <section class="tabpanel" id="tab-mappa">
-    <p class="chartlabel">Punti di partenza delle corse (zoom per separare i pin)</p>
+    <div class="maptoolbar">
+      <div>
+        <p class="chartlabel" style="margin-bottom:2px;">Mappa mondiale delle corse</p>
+        <p class="note" style="margin:0;">La concentrazione aumenta nei luoghi in cui hai corso più spesso</p>
+      </div>
+      <div class="mapmode" aria-label="Tipo di visualizzazione della mappa">
+        <button class="mapmodebtn active" id="mapHeatBtn" type="button">Heatmap</button>
+        <button class="mapmodebtn" id="mapPinsBtn" type="button">Pin</button>
+      </div>
+    </div>
+    <div class="maplegend" id="mapHeatLegend" style="margin-bottom:8px;">
+      <span>Meno corse</span><span class="heatbar"></span><span>Più corse</span>
+    </div>
     <div id="mapContainer"></div>
     <p class="note" style="margin-top:0.75rem;">Corse con dati GPS nel periodo selezionato: <span id="mapCount">-</span></p>
   </section>
@@ -209,6 +227,7 @@ table.cmp .delta-neg { color: #a32d2d; }
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
 <script>
 let RUNS = [];
 let ALL_YEARS = [];
@@ -228,6 +247,8 @@ const dirty = {totali:true, annuale:true, trend:true, cumulata:true, passofc:tru
 const charts = {};
 let leafletMap = null;
 let markerLayer = null;
+let heatLayer = null;
+let mapMode = "heat";
 
 function fmtPace(s){ const m=Math.floor(s/60), sec=Math.round(s%60); return m+":"+String(sec).padStart(2,"0"); }
 function fmtKm(n){ return n.toLocaleString("it-IT",{maximumFractionDigits:1}); }
@@ -593,37 +614,73 @@ function renderSettimana(){
 }
 
 // ---------- Mappa ----------
+function setMapMode(mode){
+  mapMode = mode;
+  document.getElementById("mapHeatBtn")?.classList.toggle("active", mode === "heat");
+  document.getElementById("mapPinsBtn")?.classList.toggle("active", mode === "pins");
+  const legend = document.getElementById("mapHeatLegend");
+  if (legend) legend.style.display = mode === "heat" ? "flex" : "none";
+  dirty.mappa = true;
+  renderMappa();
+  dirty.mappa = false;
+}
+
+document.getElementById("mapHeatBtn")?.addEventListener("click", () => setMapMode("heat"));
+document.getElementById("mapPinsBtn")?.addEventListener("click", () => setMapMode("pins"));
+
 function renderMappa(){
-  const runs = filteredRuns().filter(r => r.lat != null && r.lon != null);
+  const runs = filteredRuns().filter(r => Number.isFinite(r.lat) && Number.isFinite(r.lon));
   document.getElementById("mapCount").textContent = runs.length;
 
   if (!leafletMap){
-    leafletMap = L.map("mapContainer", { scrollWheelZoom: true });
+    leafletMap = L.map("mapContainer", { scrollWheelZoom: true, worldCopyJump: true });
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 18,
       attribution: "&copy; OpenStreetMap contributors"
     }).addTo(leafletMap);
     markerLayer = L.markerClusterGroup();
-    leafletMap.addLayer(markerLayer);
   }
 
+  if (markerLayer && leafletMap.hasLayer(markerLayer)) leafletMap.removeLayer(markerLayer);
+  if (heatLayer && leafletMap.hasLayer(heatLayer)) leafletMap.removeLayer(heatLayer);
   markerLayer.clearLayers();
 
   if (runs.length === 0){
-    leafletMap.setView([44.5, 11.3], 4);
+    leafletMap.setView([20, 0], 2);
+    setTimeout(() => leafletMap.invalidateSize(), 50);
     return;
   }
 
-  const markers = runs.map(r => {
-    const m = L.marker([r.lat, r.lon]);
-    const pace = r.km > 0 ? fmtPace((r.min*60)/r.km) : "-";
-    m.bindPopup(`<div class="popuprun"><b>${r.d}</b><br>${r.km.toFixed(2)} km &middot; ${pace} /km${r.hr ? " · " + Math.round(r.hr) + " bpm" : ""}</div>`);
-    return m;
-  });
-  markers.forEach(m => markerLayer.addLayer(m));
+  if (mapMode === "heat"){
+    // Ogni corsa contribuisce allo stesso modo: la densità visiva rappresenta
+    // quante volte hai corso in una determinata area geografica.
+    const heatPoints = runs.map(r => [r.lat, r.lon, 0.65]);
+    heatLayer = L.heatLayer(heatPoints, {
+      radius: 24,
+      blur: 20,
+      maxZoom: 11,
+      minOpacity: 0.28,
+      gradient: {
+        0.20: "#2a78d6",
+        0.40: "#34d399",
+        0.60: "#fbbf24",
+        0.80: "#fb923c",
+        1.00: "#e34948"
+      }
+    }).addTo(leafletMap);
+  } else {
+    const markers = runs.map(r => {
+      const m = L.marker([r.lat, r.lon]);
+      const pace = r.km > 0 ? fmtPace((r.min*60)/r.km) : "-";
+      m.bindPopup(`<div class="popuprun"><b>${r.d}</b><br>${r.km.toFixed(2)} km &middot; ${pace} /km${r.hr ? " · " + Math.round(r.hr) + " bpm" : ""}</div>`);
+      return m;
+    });
+    markers.forEach(m => markerLayer.addLayer(m));
+    leafletMap.addLayer(markerLayer);
+  }
 
   const bounds = L.latLngBounds(runs.map(r => [r.lat, r.lon]));
-  leafletMap.fitBounds(bounds, { padding: [24,24], maxZoom: 14 });
+  leafletMap.fitBounds(bounds, { padding: [24,24], maxZoom: mapMode === "heat" ? 9 : 14 });
   setTimeout(() => leafletMap.invalidateSize(), 50);
 }
 

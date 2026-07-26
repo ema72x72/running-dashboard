@@ -569,25 +569,20 @@ function runDateToLocalTime(dateString){
 }
 
 function startOfLocalDay(date = new Date()){
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
-function addLocalDays(date, days){
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 }
 
 function sumKmInRange(start, end){
-  const startTime = start instanceof Date ? start.getTime() : start;
-  const endTime = end instanceof Date ? end.getTime() : end;
   return RUNS.filter(r => {
     const t = runDateToLocalTime(r.d);
-    return t >= startTime && t < endTime;
+    return t >= start && t < end;
   }).reduce((s,r) => s + r.km, 0);
 }
 
 function renderComparisonTable(){
+  const DAY = 86400000;
   const todayStart = startOfLocalDay();
-  const tomorrowStart = addLocalDays(todayStart, 1);
+  const tomorrowStart = todayStart + DAY;
   const periods = [
     {label:"Last 7 days", days:7},
     {label:"Last 30 days", days:30},
@@ -596,10 +591,9 @@ function renderComparisonTable(){
   ];
   const body = document.getElementById("cmpBody");
   body.innerHTML = periods.map(p => {
-    // Exactly p.days local calendar dates, including today.
-    // Example for 7 days on Sunday: Monday through Sunday.
-    const curStart = addLocalDays(todayStart, -(p.days - 1));
-    const prevStart = addLocalDays(curStart, -p.days);
+    // Includes today and exactly p.days - 1 preceding calendar dates.
+    const curStart = todayStart - (p.days - 1) * DAY;
+    const prevStart = curStart - p.days * DAY;
     const cur = sumKmInRange(curStart, tomorrowStart);
     const prev = sumKmInRange(prevStart, curStart);
     let deltaTxt, deltaClass, arrow;
@@ -630,6 +624,7 @@ let runTrackCache = new Map();
 let runDetailMap = null;
 let runRouteLayer = null;
 let runMarkersLayer = null;
+let runHoverMarker = null;
 let runDetailChart = null;
 let runMetric = "pace";
 
@@ -716,9 +711,35 @@ function metricValue(point, previous, metric){
   if (metric === "hr") return Number(point.hr);
   if (metric === "elevation") return Number(point.alt);
   if (metric === "cadence") return Number(point.cad);
+  // Prefer Strava's smoothed velocity stream. One-second distance deltas can be
+  // nearly zero during GPS jitter and create impossible pace spikes.
+  const velocity=Number(point.v);
+  if(Number.isFinite(velocity) && velocity>0){
+    const pace=1000/velocity;
+    return pace>=150 && pace<=900 ? pace : NaN; // 2:30–15:00 /km
+  }
   if (!previous || !Number.isFinite(point.m) || !Number.isFinite(previous.m) || !Number.isFinite(point.t) || !Number.isFinite(previous.t)) return NaN;
   const dm=point.m-previous.m, dt=point.t-previous.t;
-  return dm > 0 && dt > 0 ? dt/(dm/1000) : NaN;
+  if(dm<2 || dt<=0) return NaN;
+  const pace=dt/(dm/1000);
+  return pace>=150 && pace<=900 ? pace : NaN;
+}
+function movingAverage(values, radius=7){
+  const out=[];
+  for(let i=0;i<values.length;i++){
+    let sum=0,count=0;
+    for(let j=Math.max(0,i-radius);j<=Math.min(values.length-1,i+radius);j++){
+      const value=values[j]; if(Number.isFinite(value)){ sum+=value; count++; }
+    }
+    out.push(count?sum/count:NaN);
+  }
+  return out;
+}
+function metricSeries(track, metric){
+  const points=(track?.points||[]), raw=[];
+  for(let i=0;i<points.length;i++) raw.push(metricValue(points[i],points[i-1],metric));
+  const values=(metric==="pace"||metric==="hr"||metric==="cadence")?movingAverage(raw,7):raw;
+  return points.map((point,index)=>({point,value:values[index]}));
 }
 function metricPalette(metric){
   if(metric==="hr") return ["#2563eb","#22c55e","#eab308","#f97316","#ef4444"];
@@ -737,33 +758,45 @@ function segmentColour(value, breaks, palette, metric){
 function renderDetailedMap(track){
   const element=document.getElementById("runDetailMap"); if(!element) return;
   if(runDetailMap){ runDetailMap.remove(); runDetailMap=null; }
+  runHoverMarker=null;
   runDetailMap=L.map(element,{zoomControl:true});
   L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{attribution:"&copy; OpenStreetMap &copy; CARTO",maxZoom:20}).addTo(runDetailMap);
-  const points=(track && Array.isArray(track.points)) ? track.points.filter(p=>Number.isFinite(p.lat)&&Number.isFinite(p.lon)) : [];
-  if(points.length<2){ runDetailMap.setView([20,0],2); L.popup().setLatLng([20,0]).setContent("Detailed route is not available for this run yet.").openOn(runDetailMap); return; }
-  const values=[]; for(let i=1;i<points.length;i++){ const v=metricValue(points[i],points[i-1],runMetric); if(Number.isFinite(v)) values.push(v); }
+  const series=metricSeries(track,runMetric).filter(item=>Number.isFinite(item.point.lat)&&Number.isFinite(item.point.lon));
+  const points=series.map(item=>item.point);
+  if(points.length<2){ runDetailMap.setView([20,0],2); L.popup().setLatLng([20,0]).setContent("Detailed route is not available for this run yet. Run the historical backfill to download it.").openOn(runDetailMap); return; }
+  const values=series.map(item=>item.value).filter(Number.isFinite);
   const breaks=[.2,.4,.6,.8].map(q=>quantile(values,q)); const palette=metricPalette(runMetric);
   const group=L.featureGroup().addTo(runDetailMap);
-  for(let i=1;i<points.length;i++){
-    const value=metricValue(points[i],points[i-1],runMetric); const colour=Number.isFinite(value)?segmentColour(value,breaks,palette,runMetric):"#64748b";
+  for(let i=1;i<series.length;i++){
+    const value=series[i].value; const colour=Number.isFinite(value)?segmentColour(value,breaks,palette,runMetric):"#64748b";
     L.polyline([[points[i-1].lat,points[i-1].lon],[points[i].lat,points[i].lon]],{color:colour,weight:5,opacity:.95}).addTo(group);
   }
   L.circleMarker([points[0].lat,points[0].lon],{radius:7,color:"#fff",weight:2,fillColor:"#22c55e",fillOpacity:1}).bindTooltip("Start").addTo(group);
   const last=points[points.length-1]; L.circleMarker([last.lat,last.lon],{radius:7,color:"#fff",weight:2,fillColor:"#111827",fillOpacity:1}).bindTooltip("Finish").addTo(group);
+  runHoverMarker=L.circleMarker([points[0].lat,points[0].lon],{radius:6,color:"#fff",weight:2,fillColor:"#fc4c02",fillOpacity:1,interactive:false}).addTo(runDetailMap);
+  runHoverMarker.setStyle({opacity:0,fillOpacity:0});
   runDetailMap.fitBounds(group.getBounds(),{padding:[20,20]});
 }
 function trackSeries(track, metric){
-  const points=(track?.points||[]); const data=[];
-  for(let i=1;i<points.length;i++){
-    const x=Number(points[i].m)/1000; const y=metricValue(points[i],points[i-1],metric);
-    if(Number.isFinite(x)&&Number.isFinite(y)) data.push({x,y});
-  }
+  const data=[];
+  metricSeries(track,metric).forEach(({point,value},index)=>{
+    const x=Number(point.m)/1000;
+    if(Number.isFinite(x)&&Number.isFinite(value)) data.push({x,y:value,pointIndex:index});
+  });
   return data;
+}
+function showRunPoint(track, dataPoint){
+  if(!runDetailMap||!runHoverMarker||!dataPoint) return;
+  const point=track?.points?.[dataPoint.pointIndex];
+  if(!point||!Number.isFinite(point.lat)||!Number.isFinite(point.lon)) return;
+  runHoverMarker.setLatLng([point.lat,point.lon]);
+  runHoverMarker.setStyle({opacity:1,fillOpacity:1});
 }
 function renderRunChart(track){
   const canvas=document.getElementById("runPerformanceChart"); if(!canvas) return;
   const data=trackSeries(track,runMetric); if(runDetailChart) runDetailChart.destroy();
-  runDetailChart=new Chart(canvas,{type:"line",data:{datasets:[{data,borderColor:runMetric==="hr"?"#ef4444":"#2a78d6",borderWidth:2,pointRadius:0,tension:.2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${runMetric}: ${runMetric==="pace"?fmtPace(c.parsed.y):Math.round(c.parsed.y)}`}}},scales:{x:{type:"linear",title:{display:true,text:"km"},grid:{color:gridColor}},y:{reverse:runMetric==="pace",grid:{color:gridColor},ticks:{callback:v=>runMetric==="pace"?fmtPace(v):v}}}}});
+  const label={pace:"Pace",hr:"Heart rate",elevation:"Elevation",cadence:"Cadence"}[runMetric]||runMetric;
+  runDetailChart=new Chart(canvas,{type:"line",data:{datasets:[{data,borderColor:runMetric==="hr"?"#ef4444":"#2a78d6",borderWidth:2,pointRadius:0,tension:.28,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"nearest",intersect:false},onHover:(event,elements)=>{ if(elements.length) showRunPoint(track,data[elements[0].index]); else if(runHoverMarker) runHoverMarker.setStyle({opacity:0,fillOpacity:0}); },plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${label}: ${runMetric==="pace"?fmtPace(c.parsed.y):Math.round(c.parsed.y)}`}}},scales:{x:{type:"linear",title:{display:true,text:"km"},grid:{color:gridColor}},y:{reverse:runMetric==="pace",grid:{color:gridColor},ticks:{callback:v=>runMetric==="pace"?fmtPace(v):v}}}}});
 }
 function buildSplits(track){
   const points=track?.points||[]; if(points.length<2) return [];

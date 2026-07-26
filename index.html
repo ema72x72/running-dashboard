@@ -569,20 +569,25 @@ function runDateToLocalTime(dateString){
 }
 
 function startOfLocalDay(date = new Date()){
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function addLocalDays(date, days){
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
 }
 
 function sumKmInRange(start, end){
+  const startTime = start instanceof Date ? start.getTime() : start;
+  const endTime = end instanceof Date ? end.getTime() : end;
   return RUNS.filter(r => {
     const t = runDateToLocalTime(r.d);
-    return t >= start && t < end;
+    return t >= startTime && t < endTime;
   }).reduce((s,r) => s + r.km, 0);
 }
 
 function renderComparisonTable(){
-  const DAY = 86400000;
   const todayStart = startOfLocalDay();
-  const tomorrowStart = todayStart + DAY;
+  const tomorrowStart = addLocalDays(todayStart, 1);
   const periods = [
     {label:"Last 7 days", days:7},
     {label:"Last 30 days", days:30},
@@ -591,9 +596,10 @@ function renderComparisonTable(){
   ];
   const body = document.getElementById("cmpBody");
   body.innerHTML = periods.map(p => {
-    // Includes today and exactly p.days - 1 preceding calendar dates.
-    const curStart = todayStart - (p.days - 1) * DAY;
-    const prevStart = curStart - p.days * DAY;
+    // Exactly p.days local calendar dates, including today.
+    // Example for 7 days on Sunday: Monday through Sunday.
+    const curStart = addLocalDays(todayStart, -(p.days - 1));
+    const prevStart = addLocalDays(curStart, -p.days);
     const cur = sumKmInRange(curStart, tomorrowStart);
     const prev = sumKmInRange(prevStart, curStart);
     let deltaTxt, deltaClass, arrow;

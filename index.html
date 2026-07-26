@@ -432,7 +432,7 @@ let markerLayer = null;
 let heatLayer = null;
 let mapMode = "heat";
 
-function fmtPace(s){ const m=Math.floor(s/60), sec=Math.round(s%60); return m+":"+String(sec).padStart(2,"0"); }
+function fmtPace(s){ const total=Math.round(Number(s)); if(!Number.isFinite(total)) return "—"; const m=Math.floor(total/60), sec=total%60; return m+":"+String(sec).padStart(2,"0"); }
 function fmtKm(n){ return n.toLocaleString("en-IT",{maximumFractionDigits:1}); }
 function fmtDate(d){ return d.toLocaleDateString("en-IT",{day:"numeric",month:"short",year:"numeric"}); }
 
@@ -636,15 +636,22 @@ function runTimestamp(run){
 function sortedSelectableRuns(){
   return filteredRuns().slice().sort((a,b)=>runTimestamp(b)-runTimestamp(a));
 }
+function trackPath(run){
+  if (!run) return null;
+  if (run.track_file) return run.track_file;
+  if (run.id !== null && run.id !== undefined && String(run.id).trim()) return `data/tracks/${String(run.id).trim()}.json`;
+  return null;
+}
 function runLabel(run){
   const distance = Number(run.km || 0).toLocaleString("en-IT",{maximumFractionDigits:2});
-  return `${run.d} · ${distance} km · ${run.name || "Run"}${run.track_file ? "" : " · summary only"}`;
+  return `${run.d} · ${distance} km · ${run.name || "Run"}`;
 }
 async function loadRunTrack(run){
-  if (!run || !run.track_file) return null;
-  if (runTrackCache.has(run.track_file)) return runTrackCache.get(run.track_file);
-  const track = await fetchJson(run.track_file);
-  runTrackCache.set(run.track_file, track);
+  const path=trackPath(run);
+  if (!path) return null;
+  if (runTrackCache.has(path)) return runTrackCache.get(path);
+  const track = await fetchJson(path);
+  runTrackCache.set(path, track);
   return track;
 }
 function runLocation(run){

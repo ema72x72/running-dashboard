@@ -763,61 +763,51 @@ function segmentColour(value, breaks, palette, metric){
   return palette[Math.max(0,Math.min(palette.length-1,index))];
 }
 function renderDetailedMap(track){
-  const element=document.getElementById("runDetailMap"); if(!element) return;
-  if(runDetailMap){ runDetailMap.remove(); runDetailMap=null; }
-  runHoverMarker=null;
-  runDetailMap=L.map(element,{zoomControl:true});
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{attribution:"&copy; OpenStreetMap &copy; CARTO",maxZoom:20}).addTo(runDetailMap);
+  const element = document.getElementById("runDetailMap");
+  if (!element) return;
+  try {
+    if (runDetailMap) { runDetailMap.remove(); runDetailMap = null; }
+    runHoverMarker = null;
+    runDetailMap = L.map(element, {zoomControl:true});
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      attribution:"&copy; OpenStreetMap &copy; CARTO", maxZoom:20
+    }).addTo(runDetailMap);
 
-  const fullSeries=metricSeries(track,runMetric).filter(item=>Number.isFinite(Number(item.point.lat))&&Number.isFinite(Number(item.point.lon)));
-  if(fullSeries.length<2){
-    runDetailMap.setView([20,0],2);
-    L.popup().setLatLng([20,0]).setContent("Detailed route is not available for this run yet.").openOn(runDetailMap);
-    return;
+    const points = Array.isArray(track?.points)
+      ? track.points.filter(p => Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lon)))
+      : [];
+
+    if (points.length < 2) {
+      runDetailMap.setView([20,0],2);
+      L.popup().setLatLng([20,0]).setContent("Detailed route unavailable for this run.").openOn(runDetailMap);
+      return;
+    }
+
+    // Draw one reliable base route first. This prevents a colouring error from
+    // making the entire route disappear.
+    const maxPoints = 1200;
+    const step = Math.max(1, Math.ceil(points.length / maxPoints));
+    const sampled = points.filter((_, i) => i % step === 0 || i === points.length - 1);
+    const latlngs = sampled.map(p => [Number(p.lat), Number(p.lon)]);
+    const route = L.polyline(latlngs, {color:"#2a78d6", weight:5, opacity:.95}).addTo(runDetailMap);
+
+    L.circleMarker(latlngs[0], {radius:7,color:"#fff",weight:2,fillColor:"#22c55e",fillOpacity:1}).bindTooltip("Start").addTo(runDetailMap);
+    L.circleMarker(latlngs[latlngs.length-1], {radius:7,color:"#fff",weight:2,fillColor:"#111827",fillOpacity:1}).bindTooltip("Finish").addTo(runDetailMap);
+    runHoverMarker = L.circleMarker(latlngs[0], {radius:6,color:"#fff",weight:2,fillColor:"#fc4c02",fillOpacity:0,opacity:0,interactive:false}).addTo(runDetailMap);
+    runDetailMap.fitBounds(route.getBounds(), {padding:[20,20]});
+    setTimeout(() => runDetailMap && runDetailMap.invalidateSize(), 50);
+  } catch (error) {
+    console.error("Run map rendering failed", error);
+    element.innerHTML = '<p class="run-empty">Map rendering failed. Open the browser console for details.</p>';
   }
-
-  // Rendering thousands of one-second polylines blocks Safari and delays the
-  // chart, splits and navigation controls. Keep at most about 600 map points.
-  const step=Math.max(1,Math.ceil(fullSeries.length/600));
-  const series=fullSeries.filter((_,i)=>i%step===0 || i===fullSeries.length-1);
-  const values=series.map(item=>item.value).filter(Number.isFinite);
-  const breaks=[.2,.4,.6,.8].map(q=>quantile(values,q));
-  const palette=metricPalette(runMetric);
-  const group=L.featureGroup().addTo(runDetailMap);
-
-  // Combine consecutive segments with the same colour into a single polyline.
-  let currentColour=null, currentCoords=[];
-  const flush=()=>{
-    if(currentCoords.length>1) L.polyline(currentCoords,{color:currentColour||"#2a78d6",weight:5,opacity:.95,lineCap:"round",lineJoin:"round"}).addTo(group);
-    currentCoords=[];
-  };
-  for(let i=1;i<series.length;i++){
-    const value=series[i].value;
-    const colour=Number.isFinite(value)?segmentColour(value,breaks,palette,runMetric):"#64748b";
-    const a=[Number(series[i-1].point.lat),Number(series[i-1].point.lon)];
-    const b=[Number(series[i].point.lat),Number(series[i].point.lon)];
-    if(colour!==currentColour){ flush(); currentColour=colour; currentCoords=[a,b]; }
-    else currentCoords.push(b);
-  }
-  flush();
-
-  const first=series[0].point, last=series[series.length-1].point;
-  L.circleMarker([first.lat,first.lon],{radius:7,color:"#fff",weight:2,fillColor:"#22c55e",fillOpacity:1}).bindTooltip("Start").addTo(group);
-  L.circleMarker([last.lat,last.lon],{radius:7,color:"#fff",weight:2,fillColor:"#111827",fillOpacity:1}).bindTooltip("Finish").addTo(group);
-  runHoverMarker=L.circleMarker([first.lat,first.lon],{radius:6,color:"#fff",weight:2,fillColor:"#fc4c02",fillOpacity:1,interactive:false}).addTo(runDetailMap);
-  runHoverMarker.setStyle({opacity:0,fillOpacity:0});
-  runDetailMap.fitBounds(group.getBounds(),{padding:[20,20]});
-  setTimeout(()=>runDetailMap && runDetailMap.invalidateSize(),50);
 }
 function trackSeries(track, metric){
-  const all=[];
+  const data=[];
   metricSeries(track,metric).forEach(({point,value},index)=>{
     const x=Number(point.m)/1000;
-    if(Number.isFinite(x)&&Number.isFinite(value)) all.push({x,y:value,pointIndex:index});
+    if(Number.isFinite(x)&&Number.isFinite(value)) data.push({x,y:value,pointIndex:index});
   });
-  // Chart.js remains responsive on mobile with a bounded number of samples.
-  const step=Math.max(1,Math.ceil(all.length/1200));
-  return all.filter((_,i)=>i%step===0 || i===all.length-1);
+  return data;
 }
 function showRunPoint(track, dataPoint){
   if(!runDetailMap||!runHoverMarker||!dataPoint) return;
@@ -859,39 +849,48 @@ function renderRunInsights(run,track){
 }
 function bindRunControls(run,index,runs,track){
   const prev=document.getElementById("previousRunBtn"), next=document.getElementById("nextRunBtn");
-  if(prev) prev.onclick=()=>selectRun(runs[index+1]?.id || runKey(runs[index+1]));
-  if(next) next.onclick=()=>selectRun(runs[index-1]?.id || runKey(runs[index-1]));
+  if(prev) prev.onclick=()=>{ const target=runs[index+1]; if(target) selectRun(runKey(target)); };
+  if(next) next.onclick=()=>{ const target=runs[index-1]; if(target) selectRun(runKey(target)); };
   document.querySelectorAll("#routeMetricToggle button").forEach(button=>button.onclick=()=>{ document.querySelectorAll("#routeMetricToggle button").forEach(b=>b.classList.remove("active")); button.classList.add("active"); runMetric=button.dataset.metric; renderDetailedMap(track); renderRunChart(track); });
   const compare=document.getElementById("compareSimilarBtn"); if(compare) compare.onclick=()=>compareSimilarRun(run,runs);
 }
 function runKey(run){ return run?.id || `${run?.d}-${run?.km}-${run?.min}`; }
 function selectRun(key){ selectedRunId=String(key); dirty.runs=true; renderRuns(); }
 function compareSimilarRun(run,runs){
-  const candidates=runs.filter(r=>String(runKey(r))!==String(runKey(run))); const target=document.getElementById("compareResult"); if(!target||!candidates.length)return;
+  const candidates=runs.filter(r=>runKey(r)!==runKey(run)); const target=document.getElementById("compareResult"); if(!target||!candidates.length)return;
   const similar=candidates.slice().sort((a,b)=>Math.abs(a.km-run.km)-Math.abs(b.km-run.km))[0]; const paceA=paceSecondsFromRun(run), paceB=paceSecondsFromRun(similar);
   target.style.display="block"; target.innerHTML=`Closest-distance run: <strong>${escapeHtml(similar.d)}</strong> · ${detailValue(similar.km," km",2)} · ${paceB?fmtPace(paceB):"—"}/km. ${paceA&&paceB?(paceA<paceB?"The selected run was faster.":"The comparison run was faster."):""}`;
 }
-let runRenderToken=0;
 async function renderSelectedRun(run,runs){
-  const token=++runRenderToken;
-  const content=document.getElementById("runDetailContent");
-  const index=runs.findIndex(r=>String(runKey(r))===String(runKey(run)));
-  content.innerHTML=buildRunShell(run,index,runs);
+  const content = document.getElementById("runDetailContent");
+  const index = runs.findIndex(r => String(runKey(r)) === String(runKey(run)));
+  content.innerHTML = buildRunShell(run,index,runs);
 
-  // Navigation must work immediately, even while the track file is loading.
+  // Navigation must work even if the track request or a renderer fails.
   bindRunControls(run,index,runs,null);
-  const splitTarget=document.getElementById("runSplits");
-  if(splitTarget) splitTarget.innerHTML='<p class="empty">Loading splits…</p>';
 
-  let track=null;
-  try{ track=await loadRunTrack(run); }
-  catch(error){ console.error("Unable to load track for run",runKey(run),error); }
-  if(token!==runRenderToken) return; // ignore an older async response
+  let track = null;
+  try {
+    track = await loadRunTrack(run);
+  } catch (error) {
+    console.error("Track loading failed", trackPath(run), error);
+  }
 
-  renderDetailedMap(track);
-  renderRunChart(track);
-  renderSplits(track);
-  renderRunInsights(run,track);
+  // Render each component independently so one failure cannot blank the rest.
+  try { renderDetailedMap(track); } catch (error) { console.error("Map failed", error); }
+  try { renderRunChart(track); } catch (error) {
+    console.error("Performance chart failed", error);
+    const canvas = document.getElementById("runPerformanceChart");
+    if (canvas?.parentElement) canvas.parentElement.innerHTML = '<p class="empty">Performance data could not be rendered.</p>';
+  }
+  try { renderSplits(track); } catch (error) {
+    console.error("Splits failed", error);
+    const target = document.getElementById("runSplits");
+    if (target) target.innerHTML = '<p class="empty">Split data could not be rendered.</p>';
+  }
+  try { renderRunInsights(run,track); } catch (error) { console.error("Insights failed", error); }
+
+  // Rebind metric controls with the loaded track.
   bindRunControls(run,index,runs,track);
 }
 function renderRuns(){

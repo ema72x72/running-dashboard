@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -206,18 +206,33 @@ main { padding: 1.35rem 1rem 2rem; max-width: 720px; margin: 0 auto; }
   .home-kpis .kpicard, .home-kpis .kpicard.secondary { min-height:150px; }
 }
 
+
+/* Pull-to-refresh indicator */
+.pull-indicator {
+  position: fixed; left: 50%; top: env(safe-area-inset-top); z-index: 60;
+  transform: translate(-50%, -46px); transition: transform .18s ease, opacity .18s ease;
+  opacity: 0; pointer-events: none; display:flex; align-items:center; gap:7px;
+  padding:7px 11px; border-radius:999px; background:var(--surface-2);
+  border:1px solid var(--border); box-shadow:0 5px 18px rgba(0,0,0,.18);
+  color:var(--text-secondary); font-size:12px; white-space:nowrap;
+}
+.pull-indicator.visible { opacity:1; }
+.pull-indicator .pull-arrow { font-size:15px; color:var(--accent); }
+.pull-indicator.refreshing .pull-arrow { animation:spin .7s linear infinite; }
+
 </style>
 </head>
 <body>
+<div class="pull-indicator" id="pullIndicator" aria-live="polite"><span class="pull-arrow">↻</span><span id="pullText">Pull to refresh</span></div>
 
 <header>
   <div class="headerrow">
     <div class="brandblock">
       <div class="brandline"><span class="brandmark" aria-hidden="true">🏃</span><h1>Running Dashboard</h1></div>
-      <p class="syncstatus"><span class="syncdot loading" id="syncDot"></span><span id="stravaStatus">Caricamento dati…</span></p>
+      <p class="syncstatus"><span class="syncdot loading" id="syncDot"></span><span id="stravaStatus">Loading data…</span></p>
     </div>
-    <button class="stravabtn" id="stravaBtn" type="button" aria-label="Aggiorna i dati da Strava">
-      <span class="spin" id="stravaSpin"></span><span class="refreshicon" id="refreshIcon" aria-hidden="true">↻</span><span id="stravaBtnLabel">Aggiorna</span>
+    <button class="stravabtn" id="stravaBtn" type="button" aria-label="Update data from Strava">
+      <span class="spin" id="stravaSpin"></span><span class="refreshicon" id="refreshIcon" aria-hidden="true">↻</span><span id="stravaBtnLabel">Update</span>
     </button>
   </div>
 </header>
@@ -225,14 +240,14 @@ main { padding: 1.35rem 1rem 2rem; max-width: 720px; margin: 0 auto; }
 <div class="yearrow" id="yearRow"></div>
 
 <div class="tabs" id="tabRow">
-  <div class="tab active" data-tab="totali">Totali</div>
-  <div class="tab" data-tab="annuale">Annuale</div>
+  <div class="tab active" data-tab="totali">Overview</div>
+  <div class="tab" data-tab="annuale">Yearly</div>
   <div class="tab" data-tab="trend">Trend</div>
-  <div class="tab" data-tab="cumulata">Cumulata</div>
-  <div class="tab" data-tab="passofc">Passo, FC &amp; cadenza</div>
-  <div class="tab" data-tab="efficienza">Efficienza</div>
-  <div class="tab" data-tab="settimana">Settimana</div>
-  <div class="tab" data-tab="mappa">Mappa</div>
+  <div class="tab" data-tab="cumulata">Cumulative</div>
+  <div class="tab" data-tab="passofc">Pace, HR &amp; cadence</div>
+  <div class="tab" data-tab="efficienza">Efficiency</div>
+  <div class="tab" data-tab="settimana">Weekdays</div>
+  <div class="tab" data-tab="mappa">Map</div>
 </div>
 
 <main>
@@ -243,89 +258,89 @@ main { padding: 1.35rem 1rem 2rem; max-width: 720px; margin: 0 auto; }
 
     <div class="comparison-panel">
       <div class="comparison-head">
-        <p class="comparison-title">Confronto con il periodo precedente</p>
-        <p class="comparison-note">Calcolato su oggi, indipendente dal filtro anni selezionato</p>
+        <p class="comparison-title">Comparison with the previous period</p>
+        <p class="comparison-note">Calculated as of today, independently of the selected-year filter</p>
       </div>
       <div class="comparison-grid" id="cmpBody"></div>
     </div>
-    <p class="home-footer"><span class="heart">♡</span>Ogni corsa conta.</p>
+    <p class="home-footer"><span class="heart">♡</span>Every run counts.</p>
   </section>
 
   <section class="tabpanel" id="tab-annuale">
-    <p class="chartlabel">Chilometri totali per anno</p>
-    <div class="chartwrap" style="height:260px;"><canvas id="chartYearly" role="img" aria-label="Chilometri corsi per anno"></canvas></div>
-    <p class="chartlabel">Chilometri per mese</p>
+    <p class="chartlabel">Total kilometres by year</p>
+    <div class="chartwrap" style="height:260px;"><canvas id="chartYearly" role="img" aria-label="Kilometres run by year"></canvas></div>
+    <p class="chartlabel">Kilometres by month</p>
     <div class="chartwrap" style="height:260px;"><canvas id="chartMonthly" role="img" aria-label="Chilometri corsi per mese"></canvas></div>
   </section>
 
   <section class="tabpanel" id="tab-trend">
-    <p class="chartlabel">Passo, media mobile 30 giorni</p>
-    <div class="chartwrap" style="height:260px;"><canvas id="chartTrendPace" role="img" aria-label="Passo medio mobile su 30 giorni nel tempo"></canvas></div>
-    <p class="chartlabel">Volume settimanale, media mobile 30 giorni</p>
-    <div class="chartwrap" style="height:260px;"><canvas id="chartTrendVol" role="img" aria-label="Km settimanali medi mobili su 30 giorni nel tempo"></canvas></div>
+    <p class="chartlabel">Pace, 30-day moving average</p>
+    <div class="chartwrap" style="height:260px;"><canvas id="chartTrendPace" role="img" aria-label="30-day moving-average pace over time"></canvas></div>
+    <p class="chartlabel">Weekly volume, 30-day moving average</p>
+    <div class="chartwrap" style="height:260px;"><canvas id="chartTrendVol" role="img" aria-label="30-day moving-average weekly kilometres over time"></canvas></div>
   </section>
 
   <section class="tabpanel" id="tab-cumulata">
-    <p class="chartlabel">Km cumulati nell'anno, un colore per anno selezionato</p>
+    <p class="chartlabel">Cumulative kilometres within each year</p>
     <div class="legend" id="cumLegend"></div>
-    <div class="chartwrap" style="height:320px;" id="cumulataWrap"><canvas id="chartCumulative" role="img" aria-label="Chilometri cumulati nel corso dell'anno per anno selezionato"></canvas></div>
-    <p class="empty" id="cumulataEmpty" style="display:none;">Seleziona almeno un anno</p>
+    <div class="chartwrap" style="height:320px;" id="cumulataWrap"><canvas id="chartCumulative" role="img" aria-label="Cumulative kilometres within each selected year"></canvas></div>
+    <p class="empty" id="cumulataEmpty" style="display:none;">Select at least one year</p>
   </section>
 
   <section class="tabpanel" id="tab-passofc">
-    <p class="chartlabel">Passo medio per anno (min/km, pi&ugrave; basso = pi&ugrave; veloce)</p>
-    <div class="chartwrap" style="height:230px;"><canvas id="chartPace" role="img" aria-label="Passo medio annuale"></canvas></div>
+    <p class="chartlabel">Average pace by year (min/km, lower is faster)</p>
+    <div class="chartwrap" style="height:230px;"><canvas id="chartPace" role="img" aria-label="Average yearly pace"></canvas></div>
 
-    <p class="chartlabel">Frequenza cardiaca media e massima per anno (bpm)</p>
+    <p class="chartlabel">Average and maximum heart rate by year (bpm)</p>
     <div class="legend">
-      <span><span class="sw" style="background:#e34948"></span>media</span>
-      <span><span class="sw" style="background:#4a3aa7"></span>massima</span>
+      <span><span class="sw" style="background:#e34948"></span>average</span>
+      <span><span class="sw" style="background:#4a3aa7"></span>maximum</span>
     </div>
-    <div class="chartwrap" style="height:230px;"><canvas id="chartHr" role="img" aria-label="Frequenza cardiaca media e massima annuale"></canvas></div>
+    <div class="chartwrap" style="height:230px;"><canvas id="chartHr" role="img" aria-label="Yearly average and maximum heart rate"></canvas></div>
 
-    <p class="chartlabel">Distribuzione del tempo per zona di FC, per anno</p>
+    <p class="chartlabel">Time distribution by HR zone and year</p>
     <div class="legend" id="hrzLegend"></div>
-    <div class="chartwrap" style="height:260px;"><canvas id="chartHrZones" role="img" aria-label="Percentuale di tempo in ciascuna zona di frequenza cardiaca per anno"></canvas></div>
+    <div class="chartwrap" style="height:260px;"><canvas id="chartHrZones" role="img" aria-label="Percentage of time in each heart-rate zone by year"></canvas></div>
 
-    <p class="chartlabel">Cadenza media per anno (passi al minuto)</p>
-    <div class="chartwrap" style="height:230px;"><canvas id="chartCadence" role="img" aria-label="Cadenza media annuale in passi al minuto"></canvas></div>
+    <p class="chartlabel">Average cadence by year (steps per minute)</p>
+    <div class="chartwrap" style="height:230px;"><canvas id="chartCadence" role="img" aria-label="Yearly average cadence in steps per minute"></canvas></div>
   </section>
 
 
   <section class="tabpanel" id="tab-efficienza">
     <div class="kpigrid" id="efficiencyKpiGrid"></div>
-    <p class="kpifoot">L’efficienza è espressa in metri percorsi per battito cardiaco: valori più alti indicano più distanza coperta a parità di lavoro cardiaco. Il calcolo usa solo le corse con frequenza cardiaca valida.</p>
+    <p class="kpifoot">Efficiency is measured in metres travelled per heartbeat: higher values indicate more distance covered for the same cardiac effort. Only runs with valid heart-rate data are included.</p>
 
-    <p class="chartlabel">Efficienza media per anno (metri per battito)</p>
-    <div class="chartwrap" style="height:250px;"><canvas id="chartEfficiencyYear" role="img" aria-label="Efficienza cardiaca media per anno"></canvas></div>
+    <p class="chartlabel">Average efficiency by year (metres per heartbeat)</p>
+    <div class="chartwrap" style="height:250px;"><canvas id="chartEfficiencyYear" role="img" aria-label="Average cardiac efficiency by year"></canvas></div>
 
-    <p class="chartlabel">Scatter plot: passo e frequenza cardiaca media</p>
-    <p class="note">Ogni punto rappresenta una corsa. Più in alto e più a sinistra significa un passo più veloce con una frequenza cardiaca più bassa.</p>
+    <p class="chartlabel">Scatter plot: pace and average heart rate</p>
+    <p class="note">Each point represents a run. Higher and further left means a faster pace at a lower heart rate.</p>
     <div class="legend" id="efficiencyLegend"></div>
-    <div class="chartwrap" style="height:340px;"><canvas id="chartEfficiencyScatter" role="img" aria-label="Grafico a dispersione tra passo e frequenza cardiaca"></canvas></div>
+    <div class="chartwrap" style="height:340px;"><canvas id="chartEfficiencyScatter" role="img" aria-label="Scatter plot of pace and heart rate"></canvas></div>
   </section>
 
   <section class="tabpanel" id="tab-settimana">
-    <p class="chartlabel">Chilometri totali per giorno della settimana</p>
-    <div class="chartwrap" style="height:260px;"><canvas id="chartWeekday" role="img" aria-label="Chilometri per giorno della settimana"></canvas></div>
+    <p class="chartlabel">Total kilometres by weekday</p>
+    <div class="chartwrap" style="height:260px;"><canvas id="chartWeekday" role="img" aria-label="Kilometres by weekday"></canvas></div>
   </section>
 
   <section class="tabpanel" id="tab-mappa">
     <div class="maptoolbar">
       <div>
-        <p class="chartlabel" style="margin-bottom:2px;">Mappa mondiale delle corse</p>
-        <p class="note" style="margin:0;">La concentrazione aumenta nei luoghi in cui hai corso più spesso</p>
+        <p class="chartlabel" style="margin-bottom:2px;">Worldwide running map</p>
+        <p class="note" style="margin:0;">Intensity increases in places where you have run more often</p>
       </div>
-      <div class="mapmode" aria-label="Tipo di visualizzazione della mappa">
+      <div class="mapmode" aria-label="Map display mode">
         <button class="mapmodebtn active" id="mapHeatBtn" type="button">Heatmap</button>
-        <button class="mapmodebtn" id="mapPinsBtn" type="button">Pin</button>
+        <button class="mapmodebtn" id="mapPinsBtn" type="button">Pins</button>
       </div>
     </div>
     <div class="maplegend" id="mapHeatLegend" style="margin-bottom:8px;">
-      <span>Meno corse</span><span class="heatbar"></span><span>Più corse</span>
+      <span>Fewer runs</span><span class="heatbar"></span><span>More runs</span>
     </div>
     <div id="mapContainer"></div>
-    <p class="note" style="margin-top:0.75rem;">Corse con dati GPS nel periodo selezionato: <span id="mapCount">-</span></p>
+    <p class="note" style="margin-top:0.75rem;">Runs with GPS data in the selected period: <span id="mapCount">-</span></p>
   </section>
 
 </main>
@@ -338,8 +353,8 @@ main { padding: 1.35rem 1rem 2rem; max-width: 720px; margin: 0 auto; }
 let RUNS = [];
 let ALL_YEARS = [];
 const YEAR_COLORS = {2014:"#94a3b8",2015:"#60a5fa",2016:"#34d399",2017:"#a78bfa",2018:"#fb923c",2019:"#f87171",2020:"#fbbf24",2021:"#38bdf8",2022:"#4ade80",2023:"#f472b6",2024:"#c084fc",2025:"#2a78d6",2026:"#e34948",2027:"#0f6e56",2028:"#993556"};
-const WD_LABELS = ["Lun","Mar","Mer","Gio","Ven","Sab","Dom"];
-const HRZ_LABELS = ["Facile <130","Moderato 130-145","Medio 145-160","Intenso 160-175","Massimale 175+"];
+const WD_LABELS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const HRZ_LABELS = ["Easy <130","Moderate 130-145","Steady 145-160","Hard 160-175","Maximum 175+"];
 const HRZ_COLORS = ["#60a5fa","#34d399","#fbbf24","#fb923c","#e34948"];
 
 const isDark = matchMedia("(prefers-color-scheme: dark)").matches;
@@ -357,8 +372,8 @@ let heatLayer = null;
 let mapMode = "heat";
 
 function fmtPace(s){ const m=Math.floor(s/60), sec=Math.round(s%60); return m+":"+String(sec).padStart(2,"0"); }
-function fmtKm(n){ return n.toLocaleString("it-IT",{maximumFractionDigits:1}); }
-function fmtDate(d){ return d.toLocaleDateString("it-IT",{day:"numeric",month:"short",year:"numeric"}); }
+function fmtKm(n){ return n.toLocaleString("en-IT",{maximumFractionDigits:1}); }
+function fmtDate(d){ return d.toLocaleDateString("en-IT",{day:"numeric",month:"short",year:"numeric"}); }
 
 function filteredRuns(){ return RUNS.filter(r => selectedYears.has(r.y)); }
 function markAllDirty(){ for (const k in dirty) dirty[k] = true; }
@@ -398,7 +413,7 @@ function rebuildYearChips(){
 
   allChip = document.createElement("div");
   allChip.className = "chip all active";
-  allChip.textContent = "Tutti";
+  allChip.textContent = "All";
   allChip.onclick = () => {
     if (selectedYears.size === ALL_YEARS.length) { selectedYears.clear(); }
     else { selectedYears = new Set(ALL_YEARS); }
@@ -416,7 +431,7 @@ function rebuildYearChips(){
   if (olderYears.length){
     olderYearsChip = document.createElement("div");
     olderYearsChip.className = "chip";
-    olderYearsChip.textContent = olderYearsExpanded ? "Nascondi precedenti" : "Anni precedenti";
+    olderYearsChip.textContent = olderYearsExpanded ? "Hide earlier years" : "Earlier years";
     olderYearsChip.onclick = () => {
       olderYearsExpanded = !olderYearsExpanded;
       rebuildYearChips();
@@ -457,7 +472,7 @@ function renderTotali(){
   const foot = document.getElementById("kpiFoot");
   if (runs.length === 0){
     grid.innerHTML = "";
-    foot.innerHTML = '<span class="empty" style="display:block;">Nessun anno selezionato</span>';
+    foot.innerHTML = '<span class="empty" style="display:block;">No year selected</span>';
   } else {
     const km = runs.reduce((s,r) => s + r.km, 0);
     const min = runs.reduce((s,r) => s + r.min, 0);
@@ -467,12 +482,12 @@ function renderTotali(){
     const longest = runs.reduce((a,b) => b.km > a.km ? b : a, runs[0]);
 
     const cards = [
-      {cls:"kpi-blue", icon:"▥", value:Math.round(km).toLocaleString("it-IT"), unit:"km", label:"Totali"},
-      {cls:"kpi-green", icon:"◷", value:Math.round(min/60).toLocaleString("it-IT"), unit:"h", label:"Tempo totale"},
-      {cls:"kpi-purple", icon:"⌁", value:runs.length.toLocaleString("it-IT"), unit:"corse", label:"Totali"},
-      {cls:"kpi-amber secondary", icon:"◴", value:fmtPace(avgPaceSec), unit:"/km", label:"Passo medio"},
-      {cls:"kpi-red secondary", icon:"♥", value:avgHr ? Math.round(avgHr).toLocaleString("it-IT") : "—", unit:avgHr ? "bpm" : "", label:"FC media"},
-      {cls:"kpi-cyan secondary", icon:"≈", value:longest.km.toFixed(2).replace(".",","), unit:"km", label:"Corsa più lunga"},
+      {cls:"kpi-blue", icon:"▥", value:Math.round(km).toLocaleString("en-IT"), unit:"km", label:"Total"},
+      {cls:"kpi-green", icon:"◷", value:Math.round(min/60).toLocaleString("en-IT"), unit:"h", label:"Total time"},
+      {cls:"kpi-purple", icon:"⌁", value:runs.length.toLocaleString("en-IT"), unit:"runs", label:"Total"},
+      {cls:"kpi-amber secondary", icon:"◴", value:fmtPace(avgPaceSec), unit:"/km", label:"Average pace"},
+      {cls:"kpi-red secondary", icon:"♥", value:avgHr ? Math.round(avgHr).toLocaleString("en-IT") : "—", unit:avgHr ? "bpm" : "", label:"Average HR"},
+      {cls:"kpi-cyan secondary", icon:"≈", value:longest.km.toLocaleString("en-IT", {minimumFractionDigits:2, maximumFractionDigits:2}), unit:"km", label:"Longest run"},
     ];
     grid.innerHTML = cards.map(c => `
       <div class="kpicard ${c.cls}">
@@ -494,10 +509,10 @@ function renderComparisonTable(){
   const now = Date.now();
   const DAY = 86400000;
   const periods = [
-    {label:"Ultimi 7 giorni", days:7},
-    {label:"Ultimi 30 giorni", days:30},
-    {label:"Ultimi 90 giorni", days:90},
-    {label:"Ultimo anno", days:365},
+    {label:"Last 7 days", days:7},
+    {label:"Last 30 days", days:30},
+    {label:"Last 90 days", days:90},
+    {label:"Last year", days:365},
   ];
   const body = document.getElementById("cmpBody");
   body.innerHTML = periods.map(p => {
@@ -512,7 +527,7 @@ function renderComparisonTable(){
       deltaClass = pct >= 0 ? "delta-pos" : "delta-neg";
       arrow = pct >= 0 ? "▲" : "▼";
     } else if (cur > 0) {
-      deltaTxt = "nuovo"; deltaClass = "delta-pos"; arrow = "▲";
+      deltaTxt = "new"; deltaClass = "delta-pos"; arrow = "▲";
     } else {
       deltaTxt = "—"; deltaClass = ""; arrow = "";
     }
@@ -520,7 +535,7 @@ function renderComparisonTable(){
       <p class="compare-label">${p.label}</p>
       <p class="compare-value">${fmtKm(cur)} km</p>
       <p class="compare-delta ${deltaClass}">${arrow} ${deltaTxt}</p>
-      <p class="compare-vs">vs precedente</p>
+      <p class="compare-vs">vs previous</p>
     </div>`;
   }).join("");
 }
@@ -552,7 +567,7 @@ function renderAnnuale(){
     labels: years,
     datasets: [{ label: "Km", data: yearlyData, backgroundColor: "#2a78d6", borderRadius: 4, maxBarThickness: 34 }]
   }, {
-    plugins: { tooltip: { callbacks: { label: (ctx) => fmtKm(ctx.parsed.y) + " km · " + yearlyRuns[ctx.dataIndex] + " corse" } } },
+    plugins: { tooltip: { callbacks: { label: (ctx) => fmtKm(ctx.parsed.y) + " km · " + yearlyRuns[ctx.dataIndex] + " runs" } } },
     scales: { y: { beginAtZero:true, grid:{color:gridColor}, ticks:{callback:v=>v+" km"} }, x:{grid:{display:false}} }
   });
 
@@ -576,7 +591,7 @@ function renderAnnuale(){
 const EPOCH = new Date("2014-01-01T00:00:00Z").getTime();
 const DAY = 86400000;
 function toDayIdx(dateStr){ return Math.round((new Date(dateStr+"T00:00:00Z").getTime() - EPOCH) / DAY); }
-function dayIdxToLabel(idx){ const d = new Date(EPOCH + idx*DAY); return d.toLocaleDateString("it-IT",{month:"short",year:"2-digit"}); }
+function dayIdxToLabel(idx){ const d = new Date(EPOCH + idx*DAY); return d.toLocaleDateString("en-IT",{month:"short",year:"2-digit"}); }
 
 function renderTrend(){
   const runs = filteredRuns().slice().sort((a,b) => a.d.localeCompare(b.d));
@@ -600,16 +615,16 @@ function renderTrend(){
   const xTicks = { type:"linear", grid:{display:false}, ticks:{ callback: v => dayIdxToLabel(v) } };
 
   upsertChart("chartTrendPace", "line", {
-    datasets: [{ label:"Passo", data: pacePts, borderColor:"#4a3aa7", backgroundColor:"#4a3aa7", borderWidth:1.5, pointRadius:0, tension:0.2 }]
+    datasets: [{ label:"Pace", data: pacePts, borderColor:"#4a3aa7", backgroundColor:"#4a3aa7", borderWidth:1.5, pointRadius:0, tension:0.2 }]
   }, {
     plugins: { tooltip: { callbacks: { title: (items) => dayIdxToLabel(items[0].parsed.x), label: (ctx) => fmtPace(ctx.parsed.y) + " /km" } } },
     scales: { x: xTicks, y: { reverse:true, grid:{color:gridColor}, ticks:{callback:v=>fmtPace(v)} } }
   });
 
   upsertChart("chartTrendVol", "line", {
-    datasets: [{ label:"Km/settimana", data: volPts, borderColor:"#2a78d6", backgroundColor:"rgba(42,120,214,0.1)", fill:true, borderWidth:1.5, pointRadius:0, tension:0.2 }]
+    datasets: [{ label:"Km/week", data: volPts, borderColor:"#2a78d6", backgroundColor:"rgba(42,120,214,0.1)", fill:true, borderWidth:1.5, pointRadius:0, tension:0.2 }]
   }, {
-    plugins: { tooltip: { callbacks: { title: (items) => dayIdxToLabel(items[0].parsed.x), label: (ctx) => fmtKm(ctx.parsed.y) + " km/settimana" } } },
+    plugins: { tooltip: { callbacks: { title: (items) => dayIdxToLabel(items[0].parsed.x), label: (ctx) => fmtKm(ctx.parsed.y) + " km/week" } } },
     scales: { x: xTicks, y: { beginAtZero:true, grid:{color:gridColor}, ticks:{callback:v=>v+" km"} } }
   });
 }
@@ -652,9 +667,9 @@ function renderCumulata(){
   });
 
   upsertChart("chartCumulative", "line", { datasets }, {
-    plugins: { tooltip: { callbacks: { title: (items) => items[0].dataset.label, label: (ctx) => "giorno " + ctx.parsed.x + ": " + fmtKm(ctx.parsed.y) + " km" } } },
+    plugins: { tooltip: { callbacks: { title: (items) => items[0].dataset.label, label: (ctx) => "day " + ctx.parsed.x + ": " + fmtKm(ctx.parsed.y) + " km" } } },
     scales: {
-      x: { type:"linear", min:1, max:366, grid:{display:false}, title:{display:true, text:"giorno dell'anno"} },
+      x: { type:"linear", min:1, max:366, grid:{display:false}, title:{display:true, text:"day of year"} },
       y: { beginAtZero:true, grid:{color:gridColor}, ticks:{callback:v=>v+" km"} }
     }
   });
@@ -669,7 +684,7 @@ function renderPassoFc(){
   const paceYears = years.filter(y => byYear.get(y) && byYear.get(y).km > 0);
   upsertChart("chartPace", "line", {
     labels: paceYears,
-    datasets: [{ label:"Passo", data: paceYears.map(y => (byYear.get(y).min*60)/byYear.get(y).km), borderColor:"#4a3aa7", backgroundColor:"#4a3aa7", borderWidth:2, pointRadius:3, tension:0.2 }]
+    datasets: [{ label:"Pace", data: paceYears.map(y => (byYear.get(y).min*60)/byYear.get(y).km), borderColor:"#4a3aa7", backgroundColor:"#4a3aa7", borderWidth:2, pointRadius:3, tension:0.2 }]
   }, {
     plugins: { tooltip: { callbacks: { label: (ctx) => fmtPace(ctx.parsed.y) + " /km" } } },
     scales: { y:{reverse:true, grid:{color:gridColor}, ticks:{callback:v=>fmtPace(v)}}, x:{grid:{display:false}} }
@@ -679,8 +694,8 @@ function renderPassoFc(){
   upsertChart("chartHr", "line", {
     labels: hrYears,
     datasets: [
-      { label:"Media", data: hrYears.map(y => { const h=byYear.get(y).hr; return h.reduce((a,b)=>a+b,0)/h.length; }), borderColor:"#e34948", backgroundColor:"#e34948", borderWidth:2, pointRadius:3, tension:0.2 },
-      { label:"Massima", data: hrYears.map(y => byYear.get(y).mhr || null), borderColor:"#4a3aa7", backgroundColor:"#4a3aa7", borderWidth:2, pointRadius:3, tension:0.2, borderDash:[4,3] }
+      { label:"Average", data: hrYears.map(y => { const h=byYear.get(y).hr; return h.reduce((a,b)=>a+b,0)/h.length; }), borderColor:"#e34948", backgroundColor:"#e34948", borderWidth:2, pointRadius:3, tension:0.2 },
+      { label:"Maximum", data: hrYears.map(y => byYear.get(y).mhr || null), borderColor:"#4a3aa7", backgroundColor:"#4a3aa7", borderWidth:2, pointRadius:3, tension:0.2, borderDash:[4,3] }
     ]
   }, {
     plugins: { tooltip: { callbacks: { label: (ctx) => ctx.dataset.label + ": " + ctx.parsed.y.toFixed(0) + " bpm" } } },
@@ -707,7 +722,7 @@ function renderPassoFc(){
   const cadYears = years.filter(y => byYear.get(y) && byYear.get(y).cad.length);
   upsertChart("chartCadence", "line", {
     labels: cadYears,
-    datasets: [{ label:"Cadenza", data: cadYears.map(y => { const c=byYear.get(y).cad; return c.reduce((a,b)=>a+b,0)/c.length; }), borderColor:"#1baf7a", backgroundColor:"#1baf7a", borderWidth:2, pointRadius:3, tension:0.2 }]
+    datasets: [{ label:"Cadence", data: cadYears.map(y => { const c=byYear.get(y).cad; return c.reduce((a,b)=>a+b,0)/c.length; }), borderColor:"#1baf7a", backgroundColor:"#1baf7a", borderWidth:2, pointRadius:3, tension:0.2 }]
   }, {
     plugins: { tooltip: { callbacks: { label: (ctx) => ctx.parsed.y.toFixed(0) + " spm" } } },
     scales: { y:{grid:{color:gridColor}, ticks:{callback:v=>v+" spm"}}, x:{grid:{display:false}} }
@@ -732,8 +747,8 @@ function renderEfficienza(){
 
   if (!runs.length){
     grid.innerHTML = `
-      <div class="kpicard"><p class="label">Corse analizzabili</p><p class="value">0</p></div>
-      <div class="kpicard"><p class="label">Efficienza media</p><p class="value">—</p></div>`;
+      <div class="kpicard"><p class="label">Eligible runs</p><p class="value">0</p></div>
+      <div class="kpicard"><p class="label">Average efficiency</p><p class="value">—</p></div>`;
     upsertChart("chartEfficiencyYear", "line", {labels:[], datasets:[]}, {});
     upsertChart("chartEfficiencyScatter", "scatter", {datasets:[]}, {});
     document.getElementById("efficiencyLegend").innerHTML = "";
@@ -748,10 +763,10 @@ function renderEfficienza(){
   const pace = (totalMin*60)/totalKm;
 
   grid.innerHTML = `
-    <div class="kpicard"><p class="label">Efficienza media</p><p class="value">${efficiency.toFixed(2)} m/battito</p></div>
-    <div class="kpicard"><p class="label">Corse analizzate</p><p class="value">${runs.length}</p></div>
-    <div class="kpicard"><p class="label">Passo medio</p><p class="value">${fmtPace(pace)} /km</p></div>
-    <div class="kpicard"><p class="label">FC media ponderata</p><p class="value">${weightedHr.toFixed(0)} bpm</p></div>`;
+    <div class="kpicard"><p class="label">Average efficiency</p><p class="value">${efficiency.toFixed(2)} m/heartbeat</p></div>
+    <div class="kpicard"><p class="label">Runs analysed</p><p class="value">${runs.length}</p></div>
+    <div class="kpicard"><p class="label">Average pace</p><p class="value">${fmtPace(pace)} /km</p></div>
+    <div class="kpicard"><p class="label">Weighted average HR</p><p class="value">${weightedHr.toFixed(0)} bpm</p></div>`;
 
   const years = [...selectedYears].sort((a,b)=>a-b);
   const yearly = years.map(y => {
@@ -765,7 +780,7 @@ function renderEfficienza(){
   upsertChart("chartEfficiencyYear", "line", {
     labels: yearly.map(d=>d.year),
     datasets: [{
-      label:"Metri per battito",
+      label:"Metres per heartbeat",
       data: yearly.map(d=>d.value),
       borderColor:"#0f6e56",
       backgroundColor:"#0f6e56",
@@ -775,7 +790,7 @@ function renderEfficienza(){
     }]
   }, {
     plugins:{
-      tooltip:{callbacks:{label:(ctx)=>`${ctx.parsed.y.toFixed(2)} m/battito · ${yearly[ctx.dataIndex].count} corse`}}
+      tooltip:{callbacks:{label:(ctx)=>`${ctx.parsed.y.toFixed(2)} m/heartbeat · ${yearly[ctx.dataIndex].count} runs`}}
     },
     scales:{
       x:{grid:{display:false}},
@@ -811,20 +826,20 @@ function renderEfficienza(){
         title:(items)=>items.length ? `${items[0].raw.date} · ${items[0].dataset.label}` : "",
         label:(ctx)=>[
           `${ctx.raw.km.toFixed(1)} km · ${fmtPace(ctx.raw.y)} /km`,
-          `${ctx.raw.x.toFixed(0)} bpm · ${ctx.raw.efficiency.toFixed(2)} m/battito`
+          `${ctx.raw.x.toFixed(0)} bpm · ${ctx.raw.efficiency.toFixed(2)} m/heartbeat`
         ]
       }}
     },
     scales:{
       x:{
         type:"linear",
-        title:{display:true,text:"Frequenza cardiaca media (bpm)"},
+        title:{display:true,text:"Average heart rate (bpm)"},
         grid:{color:gridColor},
         ticks:{callback:v=>v+" bpm"}
       },
       y:{
         reverse:true,
-        title:{display:true,text:"Passo medio (min/km)"},
+        title:{display:true,text:"Average pace (min/km)"},
         grid:{color:gridColor},
         ticks:{callback:v=>fmtPace(v)}
       }
@@ -843,7 +858,7 @@ function renderSettimana(){
     labels: WD_LABELS,
     datasets: [{ label:"Km", data: wd, backgroundColor:"#2a78d6", borderRadius:4, maxBarThickness:50 }]
   }, {
-    plugins: { tooltip: { callbacks: { label: (ctx) => fmtKm(ctx.parsed.y) + " km · " + wdN[ctx.dataIndex] + " corse" } } },
+    plugins: { tooltip: { callbacks: { label: (ctx) => fmtKm(ctx.parsed.y) + " km · " + wdN[ctx.dataIndex] + " runs" } } },
     scales: { y:{beginAtZero:true, grid:{color:gridColor}, ticks:{callback:v=>v+" km"}}, x:{grid:{display:false}} }
   });
 }
@@ -887,7 +902,7 @@ function renderMappa(){
   }
 
   if (mapMode === "heat"){
-    // Ogni corsa contribuisce allo stesso modo: la densità visiva rappresenta
+    // Each run contributes equally: visual density represents
     // quante volte hai corso in una determinata area geografica.
     const heatPoints = runs.map(r => [r.lat, r.lon, 0.65]);
     heatLayer = L.heatLayer(heatPoints, {
@@ -939,36 +954,25 @@ function upsertChart(canvasId, type, data, options){
   }
 }
 
-// ---------- Data loading and GitHub sync ----------
+// ---------- Data loading, metadata and GitHub sync ----------
 const RUNS_DATA_URL = "./data/runs.json";
+const METADATA_URL = "./data/metadata.json";
 const GITHUB_WORKFLOW_URL = "https://github.com/ema72x72/running-dashboard/actions/workflows/sync-strava.yml";
 
-async function loadRuns(){
-  const separator = RUNS_DATA_URL.includes("?") ? "&" : "?";
-  const response = await fetch(
-    RUNS_DATA_URL + separator + "v=" + Date.now(),
-    { cache: "no-store" }
-  );
-
-  if (!response.ok){
-    throw new Error("Errore nel caricamento dei dati: HTTP " + response.status);
-  }
-
-  const data = await response.json();
-  if (!Array.isArray(data)){
-    throw new Error("data/runs.json non contiene un array JSON valido");
-  }
-  return {
-    runs: data,
-    lastModified: response.headers.get("last-modified")
-  };
+async function fetchJson(url){
+  const separator = url.includes("?") ? "&" : "?";
+  const response = await fetch(url + separator + "v=" + Date.now(), {cache:"no-store"});
+  if (!response.ok) throw new Error(`Unable to load ${url}: HTTP ${response.status}`);
+  return response.json();
 }
 
-function latestRunDate(runs){
-  if (!runs.length) return null;
-  return runs.reduce((latest, run) => {
-    return typeof run.d === "string" && run.d > latest ? run.d : latest;
-  }, "");
+async function loadDashboardData(){
+  const [runs, metadata] = await Promise.all([
+    fetchJson(RUNS_DATA_URL),
+    fetchJson(METADATA_URL).catch(() => null)
+  ]);
+  if (!Array.isArray(runs)) throw new Error("data/runs.json does not contain a valid JSON array");
+  return {runs, metadata};
 }
 
 function openGitHubWorkflow(){
@@ -976,21 +980,24 @@ function openGitHubWorkflow(){
 }
 
 function formatLastUpdate(value){
-  if (!value) return "Dati aggiornati";
+  if (!value) return "Last sync unavailable";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Dati aggiornati";
+  if (Number.isNaN(date.getTime())) return "Last sync unavailable";
   const now = new Date();
   const sameDay = date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
   const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
   const wasYesterday = date.getFullYear() === yesterday.getFullYear() && date.getMonth() === yesterday.getMonth() && date.getDate() === yesterday.getDate();
-  const time = new Intl.DateTimeFormat("it-IT", {hour:"2-digit", minute:"2-digit"}).format(date);
-  if (sameDay) return `Aggiornato oggi • ${time}`;
-  if (wasYesterday) return `Aggiornato ieri • ${time}`;
-  const day = new Intl.DateTimeFormat("it-IT", {day:"numeric", month:"short"}).format(date).replace(".", "");
-  return `Aggiornato ${day} • ${time}`;
+  const time = new Intl.DateTimeFormat("en-IT", {hour:"2-digit", minute:"2-digit"}).format(date);
+  if (sameDay) return `Last sync • today ${time}`;
+  if (wasYesterday) return `Last sync • yesterday ${time}`;
+  const day = new Intl.DateTimeFormat("en-IT", {day:"numeric", month:"short"}).format(date).replace(".", "");
+  return `Last sync • ${day} ${time}`;
 }
 
-async function initializeDashboard(){
+let dashboardLoading = false;
+async function refreshDashboardData({pull=false} = {}){
+  if (dashboardLoading) return;
+  dashboardLoading = true;
   const status = document.getElementById("stravaStatus");
   const dot = document.getElementById("syncDot");
   const button = document.getElementById("stravaBtn");
@@ -1001,39 +1008,79 @@ async function initializeDashboard(){
   button.disabled = true;
   spinner.classList.add("show");
   refreshIcon.style.display = "none";
-  label.textContent = "Caricamento";
-  status.textContent = "Caricamento dati…";
+  label.textContent = pull ? "Refreshing" : "Loading";
+  status.textContent = pull ? "Refreshing data…" : "Loading data…";
   dot.className = "syncdot loading";
 
   try {
-    const loaded = await loadRuns();
+    const loaded = await loadDashboardData();
     RUNS = loaded.runs;
-    ALL_YEARS = [...new Set(RUNS.map(run => run.y).filter(Number.isFinite))]
-      .sort((a, b) => b - a);
-    selectedYears = new Set(ALL_YEARS);
+    ALL_YEARS = [...new Set(RUNS.map(run => run.y).filter(Number.isFinite))].sort((a,b)=>b-a);
+    if (!selectedYears.size || [...selectedYears].some(y => !ALL_YEARS.includes(y))) selectedYears = new Set(ALL_YEARS);
 
     rebuildYearChips();
     markAllDirty();
     renderActiveTab();
 
-    status.textContent = formatLastUpdate(loaded.lastModified);
+    status.textContent = formatLastUpdate(loaded.metadata && loaded.metadata.last_sync);
     dot.className = "syncdot";
-    button.disabled = false;
-    label.textContent = "Aggiorna";
+    label.textContent = "Update";
   } catch (error){
     console.error(error);
-    status.textContent = "Dati non disponibili";
+    status.textContent = "Data unavailable";
     dot.className = "syncdot error";
-    label.textContent = "Riprova";
-    button.disabled = false;
+    label.textContent = "Retry";
   } finally {
+    button.disabled = false;
     spinner.classList.remove("show");
     refreshIcon.style.display = "inline";
+    dashboardLoading = false;
   }
 }
 
+// Pull to refresh: reloads runs.json and metadata.json without leaving the app.
+const pullIndicator = document.getElementById("pullIndicator");
+const pullText = document.getElementById("pullText");
+let pullStartY = null;
+let pullDistance = 0;
+let pullTracking = false;
+
+window.addEventListener("touchstart", event => {
+  if (window.scrollY <= 0 && event.touches.length === 1 && !dashboardLoading) {
+    pullStartY = event.touches[0].clientY;
+    pullDistance = 0;
+    pullTracking = true;
+  }
+}, {passive:true});
+
+window.addEventListener("touchmove", event => {
+  if (!pullTracking || pullStartY === null) return;
+  const delta = Math.max(0, event.touches[0].clientY - pullStartY);
+  pullDistance = Math.min(100, delta * 0.55);
+  if (pullDistance > 6) {
+    pullIndicator.classList.add("visible");
+    pullIndicator.style.transform = `translate(-50%, ${Math.min(58, pullDistance)}px)`;
+    pullText.textContent = pullDistance >= 54 ? "Release to refresh" : "Pull to refresh";
+  }
+}, {passive:true});
+
+window.addEventListener("touchend", async () => {
+  if (!pullTracking) return;
+  const shouldRefresh = pullDistance >= 54;
+  pullTracking = false;
+  pullStartY = null;
+  if (shouldRefresh) {
+    pullText.textContent = "Refreshing…";
+    pullIndicator.classList.add("refreshing");
+    await refreshDashboardData({pull:true});
+  }
+  pullIndicator.classList.remove("visible", "refreshing");
+  pullIndicator.style.transform = "translate(-50%, -46px)";
+  pullDistance = 0;
+}, {passive:true});
+
 document.getElementById("stravaBtn").addEventListener("click", openGitHubWorkflow);
-initializeDashboard();
+refreshDashboardData();
 </script>
 </body>
 </html>

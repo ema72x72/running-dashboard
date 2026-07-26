@@ -1,117 +1,117 @@
-from __future__ import annotations
+#!/usr/bin/env python3
 
-import argparse
 import json
+import time
 from pathlib import Path
-from typing import Any
 
 import requests
 
-from location_utils import (
-    apply_location_fields,
-    load_location_cache,
-    resolve_location,
-    save_location_cache,
-    valid_lat_lon,
-)
+RUNS_FILE = Path("data/runs.json")
+CACHE_FILE = Path("data/location_cache.json")
 
-DATA_FILE = Path("data/runs.json")
+USER_AGENT = "running-dashboard/1.0 (personal project)"
 
 
-def load_runs() -> list[dict[str, Any]]:
-    with DATA_FILE.open("r", encoding="utf-8") as file:
-        data = json.load(file)
-    if not isinstance(data, list):
-        raise ValueError("data/runs.json must contain a JSON array")
-    return data
+def load_cache():
+    if CACHE_FILE.exists():
+        with open(CACHE_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
 
 
-def save_runs(runs: list[dict[str, Any]]) -> None:
-    temporary = DATA_FILE.with_suffix(".json.tmp")
-    with temporary.open("w", encoding="utf-8") as file:
-        json.dump(runs, file, ensure_ascii=False, separators=(",", ":"))
-    temporary.replace(DATA_FILE)
+def save_cache(cache):
+    with open(CACHE_FILE, "w", encoding="utf-8") as f:
+        json.dump(cache, f, indent=2, ensure_ascii=False)
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Add readable locations to historical runs.")
-    parser.add_argument(
-        "--max-new-lookups",
-        type=int,
-        default=100,
-        help="Maximum uncached Nominatim requests in this execution; 0 means unlimited (default: 100).",
+def cache_key(lat, lon):
+    # circa 100 metri
+    return f"{round(lat,3):.3f},{round(lon,3):.3f}"
+
+
+def reverse_geocode(lat, lon):
+
+    r = requests.get(
+        "https://nominatim.openstreetmap.org/reverse",
+        params={
+            "format": "jsonv2",
+            "lat": lat,
+            "lon": lon,
+            "zoom": 10,
+            "addressdetails": 1,
+        },
+        headers={
+            "User-Agent": USER_AGENT
+        },
+        timeout=20,
     )
-    parser.add_argument(
-        "--language",
-        default="en,it",
-        help="Preferred response languages, in Accept-Language format (default: en,it).",
+
+    r.raise_for_status()
+
+    address = r.json().get("address", {})
+
+    return (
+        address.get("city")
+        or address.get("town")
+        or address.get("village")
+        or address.get("municipality")
+        or address.get("county")
+        or address.get("state")
     )
-    return parser.parse_args()
 
 
-def main() -> None:
-    args = parse_args()
-    runs = load_runs()
-    cache = load_location_cache()
-    session = requests.Session()
+def main():
 
-    changed_runs = 0
-    network_lookups = 0
-    already_complete = 0
-    no_coordinates = 0
-    deferred = 0
+    with open(RUNS_FILE, "r", encoding="utf-8") as f:
+        runs = json.load(f)
 
-    for index, run in enumerate(runs, start=1):
-        if run.get("place"):
-            already_complete += 1
+    cache = load_cache()
+
+    queried = 0
+    updated = 0
+
+    for run in runs:
+
+        if run.get("location"):
             continue
 
-        lat, lon = run.get("lat"), run.get("lon")
-        if not valid_lat_lon(lat, lon):
-            no_coordinates += 1
+        lat = run.get("lat")
+        lon = run.get("lon")
+
+        if lat is None or lon is None:
             continue
 
-        if args.max_new_lookups > 0 and network_lookups >= args.max_new_lookups:
-            # Cached coordinates can still be completed without another request.
-            from location_utils import coordinate_key
+        key = cache_key(lat, lon)
 
-            if coordinate_key(float(lat), float(lon)) not in cache:
-                deferred += 1
-                continue
+        if key not in cache:
 
-        try:
-            location, used_network = resolve_location(
-                lat,
-                lon,
-                cache,
-                language=args.language,
-                session=session,
-            )
-        except requests.RequestException as error:
-            print(f"Warning: location lookup failed for run {run.get('id', index)}: {error}")
-            continue
+            print(f"Looking up {lat:.4f}, {lon:.4f}")
 
-        if used_network:
-            network_lookups += 1
-            save_location_cache(cache)
+            try:
+                cache[key] = reverse_geocode(lat, lon)
 
-        if apply_location_fields(run, location):
-            changed_runs += 1
+            except Exception as e:
+                print(e)
+                cache[key] = None
 
-        if index % 100 == 0:
-            print(f"Processed {index}/{len(runs)} runs...")
+            queried += 1
 
-    if changed_runs:
-        save_runs(runs)
-    save_location_cache(cache)
+            save_cache(cache)
 
-    remaining = sum(1 for run in runs if not run.get("place") and valid_lat_lon(run.get("lat"), run.get("lon")))
-    print(f"Runs updated: {changed_runs}")
-    print(f"New reverse-geocoding requests: {network_lookups}")
-    print(f"Already had a place: {already_complete}")
-    print(f"Runs without coordinates: {no_coordinates}")
-    print(f"Deferred by lookup limit: {deferred}")
-    print(f"Runs with coordinates still missing a place: {remaining}")
+            # rispetto della policy di Nominatim
+            time.sleep(1)
+
+        run["location"] = cache[key]
+        updated += 1
+
+    with open(RUNS_FILE, "w", encoding="utf-8") as f:
+        json.dump(runs, f, indent=2, ensure_ascii=False)
+
+    print()
+    print("--------------------------------")
+    print(f"Runs updated : {updated}")
+    print(f"Queries made : {queried}")
+    print(f"Cache size   : {len(cache)}")
 
 
 if __name__ == "__main__":

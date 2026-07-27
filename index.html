@@ -33,6 +33,8 @@
   </div>
 </header>
 
+<p class="period-indicator" id="periodIndicator"></p>
+
 <div class="yearrow" id="yearRow"></div>
 
 <div class="tabs" id="tabRow">
@@ -50,6 +52,11 @@
 <main>
 
   <section class="tabpanel active" id="tab-totali">
+    <div class="status-panel" id="statusPanel">
+      <p class="status-title">Current status</p>
+      <div class="status-row" id="statusRow"></div>
+    </div>
+
     <div class="kpigrid home-kpis" id="kpiGrid"></div>
     <p class="kpifoot" id="kpiFoot"></p>
 
@@ -59,6 +66,26 @@
         <p class="comparison-note">Calculated as of today, independently of the selected-year filter</p>
       </div>
       <div class="comparison-grid" id="cmpBody"></div>
+    </div>
+
+    <div class="season-card" id="seasonGoalCard">
+      <div class="season-icon" aria-hidden="true">🏆</div>
+      <div class="season-main">
+        <p class="season-title" id="seasonGoalTitle">Season goal</p>
+        <p class="season-subtitle" id="seasonGoalSubtitle">Beat your best year</p>
+      </div>
+      <div class="season-metric">
+        <p class="season-metric-value" id="seasonGoalMetricValue"></p>
+        <p class="season-metric-label" id="seasonGoalMetricLabel"></p>
+      </div>
+      <div class="season-metric">
+        <p class="season-metric-value" id="seasonGoalPaceValue"></p>
+        <p class="season-metric-label" id="seasonGoalPaceLabel"></p>
+      </div>
+      <div class="season-spark-wrap">
+        <canvas id="seasonGoalSparkline" role="img" aria-label="Cumulative kilometres this year versus your best year"></canvas>
+      </div>
+      <div class="season-legend" id="seasonGoalLegend"></div>
     </div>
     <p class="home-footer"><span class="heart">♡</span>Every run counts.</p>
   </section>

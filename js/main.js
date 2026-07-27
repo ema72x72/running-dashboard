@@ -6,7 +6,7 @@
     getRuns, setRuns,
     getAllYears, setAllYears,
     getSelectedYears, setSelectedYears,
-    dirty, markAllDirty, fetchJson,
+    dirty, markAllDirty, fetchJson, filteredRuns,
   } = window.RD.state;
 
   const tabs = window.RD.tabs;
@@ -106,6 +106,40 @@
     const selectedYears = getSelectedYears();
     allYears.forEach(y => yearChips[y] && yearChips[y].classList.toggle("active", selectedYears.has(y)));
     if (allChip) allChip.classList.toggle("active", selectedYears.size === allYears.length);
+    updatePeriodIndicator();
+  }
+
+  // Small header line summarising the current year filter, e.g.
+  // "All selected years • May 2014 – Jul 2026". The year label reflects the
+  // selection itself; the date range reflects the actual first/last run
+  // dates within that selection (not just the calendar years).
+  function updatePeriodIndicator() {
+    const el = document.getElementById("periodIndicator");
+    if (!el) return;
+    const allYears = getAllYears();
+    const selectedYears = getSelectedYears();
+
+    let label;
+    if (!allYears.length) {
+      label = "";
+    } else if (selectedYears.size === allYears.length) {
+      label = "All selected years";
+    } else if (selectedYears.size === 1) {
+      label = String([...selectedYears][0]);
+    } else if (selectedYears.size === 0) {
+      label = "No years selected";
+    } else {
+      label = `${selectedYears.size} years selected`;
+    }
+
+    const runs = filteredRuns();
+    if (!runs.length) {
+      el.textContent = label;
+      return;
+    }
+    const dates = runs.map(r => r.d).sort();
+    const monthYear = d => new Date(d + "T00:00:00Z").toLocaleDateString("en-IT", { month: "short", year: "numeric", timeZone: "UTC" });
+    el.textContent = label ? `${label} • ${monthYear(dates[0])} – ${monthYear(dates[dates.length - 1])}` : "";
   }
 
   // ---------- Tabs ----------

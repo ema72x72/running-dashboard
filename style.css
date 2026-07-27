@@ -33,6 +33,11 @@ header {
   padding: calc(0.75rem + env(safe-area-inset-top)) 1rem 0.5rem;
   border-bottom: 0.5px solid var(--border);
 }
+.period-indicator {
+  max-width: 720px; margin: 0 auto; padding: 0.55rem 1rem 0;
+  font-size: 12px; color: var(--text-muted); background: var(--surface-0);
+}
+.period-indicator:empty { display: none; }
 .yearrow {
   display: flex; gap: 6px; overflow-x: auto; padding: 0.6rem 1rem 0.7rem;
   -webkit-overflow-scrolling: touch; background: var(--surface-0);
@@ -186,9 +191,49 @@ main { padding: 1.35rem 1rem 2rem; max-width: 720px; margin: 0 auto; }
 .compare-value { margin-top:9px; font-size:clamp(17px,4vw,25px); font-weight:650; letter-spacing:-.025em; white-space:nowrap; font-variant-numeric:tabular-nums; }
 .compare-delta { margin-top:10px; font-size:17px; font-weight:650; }
 .compare-vs { margin-top:6px; font-size:10px; color:var(--text-muted); }
+.compare-meta { margin-top:8px; font-size:10px; color:var(--text-muted); border-top:1px solid var(--border); padding-top:8px; }
 .delta-pos { color:#34c78a; }.delta-neg { color:#ff4d48; }
 .home-footer { text-align:center; color:var(--text-secondary); font-size:12px; margin:1.65rem 0 .2rem; }
 .home-footer .heart { color:var(--accent); font-size:17px; vertical-align:-1px; margin-right:5px; }
+
+.kpi-sub { margin:8px 0 0; font-size:11px; color:var(--text-muted); }
+
+/* ---------- Current status ---------- */
+.status-panel { margin-bottom:1.5rem; padding:1rem 1.1rem; border:1px solid var(--border); border-radius:18px; background:var(--surface-1); }
+.status-title { margin:0 0 12px; font-size:15px; font-weight:650; }
+.status-row { display:flex; align-items:stretch; gap:0; }
+.status-item { flex:1; min-width:0; display:flex; align-items:center; gap:10px; padding:0 12px; }
+.status-item:first-child { padding-left:0; }
+.status-item:last-child { padding-right:0; }
+.status-item + .status-item { border-left:1px solid var(--border); }
+.status-icon { width:38px; height:38px; border-radius:50%; display:grid; place-items:center; font-size:16px; flex:0 0 auto; }
+.status-icon.blue { color:#4a9cff; background:rgba(42,120,214,.18); }
+.status-icon.green { color:#45d483; background:rgba(52,199,89,.17); }
+.status-icon.purple { color:#bf6cff; background:rgba(175,82,222,.17); }
+.status-body { min-width:0; }
+.status-eyebrow { margin:0; font-size:11px; font-weight:650; }
+.status-eyebrow.blue { color:#4a9cff; } .status-eyebrow.green { color:#45d483; } .status-eyebrow.purple { color:#bf6cff; }
+.status-value { margin:3px 0 0; font-size:15px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.status-note { margin:2px 0 0; font-size:11px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* ---------- Season goal ---------- */
+.season-card {
+  display:flex; flex-wrap:wrap; align-items:center; gap:18px;
+  padding:16px 18px; border:1px solid var(--border); border-radius:15px;
+  background:var(--surface-1); margin-bottom:1.5rem;
+}
+.season-icon { width:42px; height:42px; border-radius:50%; display:grid; place-items:center; color:#34c78a; background:rgba(52,199,89,.14); font-size:20px; flex:0 0 auto; }
+.season-main { min-width:130px; }
+.season-title { margin:0; font-size:13px; font-weight:700; color:#34c78a; }
+.season-subtitle { margin:3px 0 0; font-size:11px; color:var(--text-muted); }
+.season-metric { min-width:110px; }
+.season-metric-value { margin:0; font-size:19px; font-weight:700; letter-spacing:-.02em; }
+.season-metric-label { margin:3px 0 0; font-size:10px; color:var(--text-muted); }
+.season-spark-wrap { flex:1 1 120px; min-width:100px; max-width:180px; height:44px; position:relative; }
+.season-legend { display:flex; flex-direction:column; gap:5px; font-size:11px; min-width:130px; }
+.season-legend-row { display:flex; align-items:center; gap:6px; white-space:nowrap; color:var(--text-secondary); }
+.season-legend-dot { width:8px; height:8px; border-radius:50%; flex:0 0 auto; }
+.season-legend-value { margin-left:auto; padding-left:8px; font-weight:650; color:var(--text-primary); }
 
 @media (max-width: 620px) {
   .kpigrid.home-kpis { gap:10px; }
@@ -199,6 +244,12 @@ main { padding: 1.35rem 1rem 2rem; max-width: 720px; margin: 0 auto; }
   .comparison-panel { padding:14px; }
   .comparison-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .comparison-note { max-width:170px; }
+  .status-panel { padding:.85rem; }
+  .status-row { flex-direction:column; gap:12px; }
+  .status-item { padding:0; }
+  .status-item + .status-item { border-left:0; border-top:1px solid var(--border); padding-top:12px; }
+  .season-card { flex-direction:column; align-items:flex-start; }
+  .season-spark-wrap { width:100%; max-width:none; }
 }
 @media (max-width: 390px) {
   .brandmark { display:none; }

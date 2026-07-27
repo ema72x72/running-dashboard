@@ -437,20 +437,66 @@ def main() -> None:
     token_data = refresh_access_token()
     access_token = token_data["access_token"]
     activities = download_activities(access_token, after_epoch)
+    activity_map = {
+    str(a["id"]): a
+    for a in activities
+    }
 
     added = 0
+    updated = 0
+
     for activity in activities:
+
         activity_id = str(activity["id"])
         sport_type = activity.get("sport_type", "")
-        if "Run" not in sport_type or activity_id in existing_ids:
+
+        if "Run" not in sport_type:
             continue
-        runs.append(convert_activity(activity, access_token))
+
+        if activity_id in existing_ids:
+
+            for i, run in enumerate(runs):
+
+                if str(run.get("id")) == activity_id:
+
+                    new_run = convert_activity(
+                        activity,
+                        access_token,
+                    )
+
+                    # mantiene eventuali campi già presenti
+                    new_run.setdefault(
+                        "track_file",
+                        run.get("track_file"),
+                    )
+
+                    runs[i] = {
+                        **run,
+                        **new_run,
+                    }
+
+                    updated += 1
+                    break
+
+            continue
+
+        runs.append(
+            convert_activity(
+                activity,
+                access_token,
+            )
+        )    
+
         existing_ids.add(activity_id)
         added += 1
 
     save_runs(runs)
     save_metadata(runs, added)
-    print(f"Sync complete: {added} new runs")
+    print(
+        f"Sync complete: "
+        f"{added} added, "
+        f"{updated} updated"
+    )
     print(f"Total runs: {len(runs)}")
 
 

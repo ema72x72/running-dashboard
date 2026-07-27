@@ -247,8 +247,50 @@
   </section>
 
   <section class="tabpanel" id="tab-settimana">
-    <p class="chartlabel">Total kilometres by weekday</p>
-    <div class="chartwrap" style="height:260px;"><canvas id="chartWeekday" role="img" aria-label="Kilometres by weekday"></canvas></div>
+    <p class="chartlabel">Metric</p>
+    <div class="weekday-metric-row" id="weekdayMetricRow">
+      <div class="chip active" data-metric="distance">Distance</div>
+      <div class="chip" data-metric="pace">Pace</div>
+      <div class="chip" data-metric="hr">Heart Rate</div>
+      <div class="chip" data-metric="runs">Runs</div>
+      <div class="chip" data-metric="duration">Duration</div>
+    </div>
+
+    <p class="empty" id="weekdayEmpty" style="display:none;">Select at least one year</p>
+
+    <div class="weekday-panel weekday-content">
+      <div class="weekday-panel-head">
+        <p class="weekday-panel-title" id="weekdayChartTitle">Average distance per run (km)</p>
+        <p class="weekday-panel-subtitle">Dashed line: overall weekly average · labels show % vs that average</p>
+      </div>
+      <div class="weekday-chart-wrap">
+        <canvas id="chartWeekday" role="img" aria-label="Weekday breakdown for the selected metric"></canvas>
+      </div>
+    </div>
+
+    <div class="weekday-pattern-panel weekday-content">
+      <p class="weekday-pattern-title">Your weekly pattern</p>
+      <div class="weekday-pattern-list" id="weekdayPatternList"></div>
+    </div>
+
+    <div class="weekday-stats weekday-content" id="weekdayStats"></div>
+
+    <div class="weekday-table-panel weekday-content">
+      <p class="weekday-table-title">Additional insights</p>
+      <div class="weekday-table-wrap">
+        <table class="weekday-table" id="weekdayTable"></table>
+      </div>
+    </div>
+
+    <div class="weekday-volume-panel weekday-content">
+      <p class="weekday-table-title">Weekday volume</p>
+      <p class="weekday-panel-subtitle">Total kilometres by weekday</p>
+      <div class="weekday-volume-chart-wrap">
+        <canvas id="chartWeekdayVolume" role="img" aria-label="Total kilometres by weekday"></canvas>
+      </div>
+    </div>
+
+    <p class="weekday-footnote weekday-content">Pace is distance-weighted. Recovery day, Tempo day and Most consistent need enough runs on that weekday to be meaningful, so they may be skipped for a weekday with very few runs.</p>
   </section>
 
   <section class="tabpanel" id="tab-mappa">

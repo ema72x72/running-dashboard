@@ -72,10 +72,40 @@
   </section>
 
   <section class="tabpanel" id="tab-annuale">
-    <p class="chartlabel">Total kilometres by year</p>
-    <div class="chartwrap" style="height:260px;"><canvas id="chartYearly" role="img" aria-label="Kilometres run by year"></canvas></div>
-    <p class="chartlabel">Kilometres by month</p>
-    <div class="chartwrap" style="height:260px;"><canvas id="chartMonthly" role="img" aria-label="Chilometri corsi per mese"></canvas></div>
+    <div class="yearly-section">
+      <div class="yearly-section-head">
+        <p class="yearly-section-title">Total kilometres by year</p>
+        <p class="yearly-section-note" id="yearlyRangeLabel"></p>
+      </div>
+      <div class="yearly-chart-wrap">
+        <canvas
+          id="chartYearly"
+          role="img"
+          aria-label="Total kilometres run by year">
+        </canvas>
+      </div>
+      <div class="yearly-stats" id="yearlyStats"></div>
+    </div>
+    <div class="yearly-section">
+      <div class="yearly-section-head">
+        <p class="yearly-section-title" id="monthlyChartTitle">
+          Kilometres by month
+        </p>
+      </div>
+      <div class="yearly-chart-wrap">
+        <canvas
+          id="chartMonthly"
+          role="img"
+          aria-label="Kilometres run by calendar month">
+        </canvas>
+      </div>
+      <p class="yearly-section-note" style="margin-top:10px;">
+        Each point represents total kilometres in one calendar month.
+        Hover or tap a point for full details.
+      </p>
+      <div class="yearly-stats" id="monthlyStats"></div>
+      <div class="yearly-footnote" id="monthlyFootnote"></div>
+    </div>
   </section>
 
   <section class="tabpanel" id="tab-trend">

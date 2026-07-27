@@ -272,3 +272,99 @@ main { padding: 1.35rem 1rem 2rem; max-width: 720px; margin: 0 auto; }
   .run-detail-item:nth-last-child(-n+2) { border-bottom:0; }
   .run-analysis-grid { grid-template-columns:1fr; }
 }
+
+/* ---------- Yearly tab ---------- */
+.yearly-section {
+  margin-bottom: 18px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface-1);
+}
+.yearly-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.yearly-section-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+  color: var(--text-primary);
+}
+.yearly-section-note {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.yearly-chart-wrap {
+  position: relative;
+  height: 310px;
+}
+.yearly-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+.yearly-stat-card {
+  min-width: 0;
+  padding: 14px 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+.yearly-stat-icon {
+  font-size: 21px;
+  line-height: 1;
+  margin-bottom: 10px;
+  color: var(--accent);
+}
+.yearly-stat-label {
+  margin: 0;
+  min-height: 28px;
+  font-size: 11px;
+  line-height: 1.25;
+  color: var(--text-secondary);
+}
+.yearly-stat-value {
+  margin: 5px 0 0;
+  font-size: 21px;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.yearly-stat-sub {
+  margin: 5px 0 0;
+  font-size: 10px;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+.yearly-footnote {
+  display: flex;
+  gap: 7px;
+  align-items: flex-start;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-muted);
+  background: var(--surface-2);
+}
+@media (max-width: 680px) {
+  .yearly-section {
+    padding: 14px;
+  }
+  .yearly-chart-wrap {
+    height: 270px;
+  }
+  .yearly-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

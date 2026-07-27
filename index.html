@@ -116,10 +116,42 @@
   </section>
 
   <section class="tabpanel" id="tab-cumulata">
-    <p class="chartlabel">Cumulative kilometres within each year</p>
-    <div class="legend" id="cumLegend"></div>
-    <div class="chartwrap" style="height:320px;" id="cumulataWrap"><canvas id="chartCumulative" role="img" aria-label="Cumulative kilometres within each selected year"></canvas></div>
-    <p class="empty" id="cumulataEmpty" style="display:none;">Select at least one year</p>
+    <div class="cumulative-panel">
+      <div class="cumulative-head">
+        <div>
+          <p class="cumulative-title">
+            Cumulative kilometres within each year
+          </p>
+          <p class="cumulative-subtitle" id="cumulativeSubtitle">
+            Comparison at the same point in each selected year
+          </p>
+        </div>
+      </div>
+      <div class="legend" id="cumLegend"></div>
+      <div
+        class="chartwrap cumulative-chart-wrap"
+        id="cumulataWrap">
+        <canvas
+          id="chartCumulative"
+          role="img"
+          aria-label="Cumulative kilometres within each selected year">
+        </canvas>
+      </div>
+      <div class="cumulative-band-note" id="cumulativeBandNote">
+        <span class="cumulative-band-swatch"></span>
+        <span>
+          Shaded area: 25th–75th percentile of selected previous years
+        </span>
+      </div>
+      <p
+        class="empty"
+        id="cumulataEmpty"
+        style="display:none;">
+        Select at least one year
+      </p>
+    </div>
+    <div class="cumulative-stats" id="cumulativeStats"></div>
+    <div class="cumulative-target" id="cumulativeTarget"></div>
   </section>
 
   <section class="tabpanel" id="tab-passofc">

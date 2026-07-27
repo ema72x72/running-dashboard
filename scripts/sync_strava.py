@@ -17,6 +17,7 @@ TOKEN_URL = "https://www.strava.com/oauth/token"
 API_URL = "https://www.strava.com/api/v3"
 DATA_FILE = Path("data/runs.json")
 METADATA_FILE = Path("data/metadata.json")
+TRACKS_DIR = Path("data/tracks")
 
 
 def refresh_access_token() -> dict[str, Any]:
@@ -129,18 +130,68 @@ def download_activities(access_token: str, after_epoch: int) -> list[dict[str, A
     return activities
 
 
-def get_hr_zones(activity_id: int, access_token: str) -> list[float]:
+def get_activity_streams(
+    activity_id: int,
+    access_token: str,
+) -> dict[str, Any]:
+    stream_keys = ",".join(
+        [
+            "latlng",
+            "time",
+            "distance",
+            "heartrate",
+            "cadence",
+            "altitude",
+            "velocity_smooth",
+            "grade_smooth",
+        ]
+    )
+
     try:
         streams = api_get(
-            f"/activities/{activity_id}/streams?keys=time,heartrate&key_by_type=true",
+            (
+                f"/activities/{activity_id}/streams"
+                f"?keys={stream_keys}&key_by_type=true"
+            ),
             access_token,
         )
-        time_data = streams.get("time", {}).get("data", [])
-        hr_data = streams.get("heartrate", {}).get("data", [])
-        return calculate_hr_zones(time_data, hr_data)
+
+        if isinstance(streams, dict):
+            return streams
+
     except requests.HTTPError as error:
-        print(f"Warning: no HR streams for activity {activity_id}: {error}")
+        print(
+            f"Warning: cannot download streams "
+            f"for activity {activity_id}: {error}"
+        )
+
+    return {}
+
+
+def stream_data(
+    streams: dict[str, Any],
+    stream_name: str,
+) -> list[Any]:
+    stream = streams.get(stream_name)
+
+    if not isinstance(stream, dict):
+        return []
+
+    data = stream.get("data")
+
+    return data if isinstance(data, list) else []
+
+
+def get_hr_zones_from_streams(
+    streams: dict[str, Any],
+) -> list[float]:
+    time_data = stream_data(streams, "time")
+    hr_data = stream_data(streams, "heartrate")
+
+    if not time_data or not hr_data:
         return [0.0, 0.0, 0.0, 0.0, 0.0]
+
+    return calculate_hr_zones(time_data, hr_data)
 
 def get_activity_details(
     activity_id: int,
@@ -162,7 +213,111 @@ def get_activity_details(
         )
 
     return {}
-    
+
+def value_at(
+    values: list[Any],
+    index: int,
+    default: Any = None,
+) -> Any:
+    if index < len(values):
+        return values[index]
+
+    return default
+
+
+def build_track_payload(
+    activity: dict[str, Any],
+    streams: dict[str, Any],
+) -> dict[str, Any]:
+    activity_id = str(activity["id"])
+
+    latlng_data = stream_data(streams, "latlng")
+    time_data = stream_data(streams, "time")
+    distance_data = stream_data(streams, "distance")
+    heartrate_data = stream_data(streams, "heartrate")
+    cadence_data = stream_data(streams, "cadence")
+    altitude_data = stream_data(streams, "altitude")
+    velocity_data = stream_data(streams, "velocity_smooth")
+    grade_data = stream_data(streams, "grade_smooth")
+
+    # Il numero di punti deve dipendere dalle coordinate GPS.
+    # In questo modo non si verifica un IndexError quando Strava
+    # restituisce tempo o distanza ma non latlng.
+    point_count = len(latlng_data)
+    points: list[dict[str, Any]] = []
+
+    for index in range(point_count):
+        latlng = latlng_data[index]
+
+        if (
+            not isinstance(latlng, list)
+            or len(latlng) < 2
+        ):
+            continue
+
+        cadence = value_at(cadence_data, index)
+
+        # Per la corsa Strava restituisce normalmente la cadenza
+        # per una sola gamba; la convertiamo in passi al minuto.
+        cadence_spm = (
+            round(float(cadence) * 2, 1)
+            if isinstance(cadence, (int, float))
+            else None
+        )
+
+        point = {
+            "lat": latlng[0],
+            "lon": latlng[1],
+            "t": value_at(time_data, index),
+            "m": value_at(distance_data, index),
+            "hr": value_at(heartrate_data, index),
+            "cad": cadence_spm,
+            "alt": value_at(altitude_data, index),
+            "v": value_at(velocity_data, index),
+            "grade": value_at(grade_data, index),
+        }
+
+        points.append(point)
+
+    gear = activity.get("gear")
+    gear_name = (
+        gear.get("name")
+        if isinstance(gear, dict)
+        else None
+    )
+
+    return {
+        "id": activity_id,
+        "name": activity.get("name"),
+        "start_local": activity.get("start_date_local"),
+        "description": activity.get("description"),
+        "gear_name": gear_name,
+        "calories": activity.get("calories"),
+        "suffer_score": activity.get("suffer_score"),
+        "perceived_exertion": activity.get("perceived_exertion"),
+        "points": points,
+    }
+
+
+def save_track(
+    activity_id: int,
+    payload: dict[str, Any],
+) -> str:
+    TRACKS_DIR.mkdir(parents=True, exist_ok=True)
+
+    track_path = TRACKS_DIR / f"{activity_id}.json"
+
+    with track_path.open("w", encoding="utf-8") as file:
+        json.dump(
+            payload,
+            file,
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
+
+    return track_path.as_posix()
+
+
 def convert_activity(
     activity: dict[str, Any],
     access_token: str,
@@ -178,8 +333,23 @@ def convert_activity(
     )
 
     # Il dettaglio attività è più completo del record restituito
-    # da /athlete/activities. In caso di errore, usiamo il record base.
+    # da /athlete/activities.
     source = {**activity, **details}
+
+    streams = get_activity_streams(
+        activity_id,
+        access_token,
+    )
+
+    track_payload = build_track_payload(
+        source,
+        streams,
+    )
+
+    track_file = save_track(
+        activity_id,
+        track_payload,
+    )
 
     start_latlng = source.get("start_latlng") or [None, None]
 
@@ -236,10 +406,9 @@ def convert_activity(
         "description": source.get("description"),
         "gear_name": gear_name,
 
-        "hrz": get_hr_zones(
-            activity_id,
-            access_token,
-        ),
+        "track_file": track_file,
+
+        "hrz": get_hr_zones_from_streams(streams),
     }
 
     return run

@@ -109,10 +109,42 @@
   </section>
 
   <section class="tabpanel" id="tab-trend">
-    <p class="chartlabel">Pace, 30-day moving average</p>
-    <div class="chartwrap" style="height:260px;"><canvas id="chartTrendPace" role="img" aria-label="30-day moving-average pace over time"></canvas></div>
-    <p class="chartlabel">Weekly volume, 30-day moving average</p>
-    <div class="chartwrap" style="height:260px;"><canvas id="chartTrendVol" role="img" aria-label="30-day moving-average weekly kilometres over time"></canvas></div>
+    <p class="chartlabel">Smoothing window</p>
+    <div class="trend-window-row" id="trendWindowRow">
+      <div class="chip" data-window="30d">30 days</div>
+      <div class="chip active" data-window="3m">3 months</div>
+      <div class="chip" data-window="1y">1 year</div>
+    </div>
+
+    <div class="trend-panel">
+      <div class="trend-panel-head">
+        <div>
+          <p class="trend-panel-title">Smoothed weekly volume (km)</p>
+          <p class="trend-panel-subtitle" id="trendVolumeSubtitle"></p>
+        </div>
+      </div>
+      <div class="trend-chart-wrap" id="trendVolumeWrap">
+        <canvas id="chartTrendVol" role="img" aria-label="Smoothed weekly running volume over time"></canvas>
+      </div>
+      <p class="empty" id="trendVolumeEmpty" style="display:none;">Insufficient data for this smoothing window</p>
+      <div class="trend-stats" id="trendVolumeStats"></div>
+    </div>
+
+    <div class="trend-panel">
+      <div class="trend-panel-head">
+        <div>
+          <p class="trend-panel-title">Pace (min/km)</p>
+          <p class="trend-panel-subtitle" id="trendPaceSubtitle"></p>
+        </div>
+      </div>
+      <div class="trend-chart-wrap" id="trendPaceWrap">
+        <canvas id="chartTrendPace" role="img" aria-label="Smoothed running pace over time"></canvas>
+      </div>
+      <p class="empty" id="trendPaceEmpty" style="display:none;">Insufficient data for this smoothing window</p>
+      <div class="trend-stats" id="trendPaceStats"></div>
+    </div>
+
+    <p class="trend-footnote">Pace is distance-weighted. Weekly volume is estimated from distances and dates of your runs.</p>
   </section>
 
   <section class="tabpanel" id="tab-cumulata">

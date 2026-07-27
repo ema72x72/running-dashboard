@@ -1,6 +1,6 @@
 // Trend tab: 30-day moving average of pace and weekly volume.
 (function () {
-  const { filteredRuns, upsertChart, fmtPace, fmtKm, gridColor } = window.RD.state;
+  const { filteredRuns, upsertChart, fmtPace, fmtKm, getGridColor } = window.RD.state;
 
   const EPOCH = new Date("2014-01-01T00:00:00Z").getTime();
   const DAY = 86400000;
@@ -32,14 +32,14 @@
       datasets: [{ label:"Pace", data: pacePts, borderColor:"#4a3aa7", backgroundColor:"#4a3aa7", borderWidth:1.5, pointRadius:0, tension:0.2 }]
     }, {
       plugins: { tooltip: { callbacks: { title: (items) => dayIdxToLabel(items[0].parsed.x), label: (ctx) => fmtPace(ctx.parsed.y) + " /km" } } },
-      scales: { x: xTicks, y: { reverse:true, grid:{color:gridColor}, ticks:{callback:v=>fmtPace(v)} } }
+      scales: { x: xTicks, y: { reverse:true, grid:{color:getGridColor()}, ticks:{callback:v=>fmtPace(v)} } }
     });
 
     upsertChart("chartTrendVol", "line", {
       datasets: [{ label:"Km/week", data: volPts, borderColor:"#2a78d6", backgroundColor:"rgba(42,120,214,0.1)", fill:true, borderWidth:1.5, pointRadius:0, tension:0.2 }]
     }, {
       plugins: { tooltip: { callbacks: { title: (items) => dayIdxToLabel(items[0].parsed.x), label: (ctx) => fmtKm(ctx.parsed.y) + " km/week" } } },
-      scales: { x: xTicks, y: { beginAtZero:true, grid:{color:gridColor}, ticks:{callback:v=>v+" km"} } }
+      scales: { x: xTicks, y: { beginAtZero:true, grid:{color:getGridColor()}, ticks:{callback:v=>v+" km"} } }
     });
   }
 

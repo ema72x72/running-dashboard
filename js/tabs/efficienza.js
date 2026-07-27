@@ -1,6 +1,6 @@
 // Efficiency tab: metres travelled per heartbeat, yearly trend + scatter plot.
 (function () {
-  const { filteredRuns, getSelectedYears, upsertChart, fmtPace, gridColor, YEAR_COLORS } = window.RD.state;
+  const { filteredRuns, getSelectedYears, upsertChart, fmtPace, getGridColor, YEAR_COLORS } = window.RD.state;
 
   function validEfficiencyRun(r) {
     if (!Number.isFinite(r.hr) || r.hr <= 0 || !Number.isFinite(r.km) || r.km <= 0 || !Number.isFinite(r.min) || r.min <= 0) return false;
@@ -65,7 +65,7 @@
       },
       scales:{
         x:{grid:{display:false}},
-        y:{grid:{color:gridColor}, ticks:{callback:v=>Number(v).toFixed(2)+" m"}}
+        y:{grid:{color:getGridColor()}, ticks:{callback:v=>Number(v).toFixed(2)+" m"}}
       }
     });
 
@@ -105,13 +105,13 @@
         x:{
           type:"linear",
           title:{display:true,text:"Average heart rate (bpm)"},
-          grid:{color:gridColor},
+          grid:{color:getGridColor()},
           ticks:{callback:v=>v+" bpm"}
         },
         y:{
           reverse:true,
           title:{display:true,text:"Average pace (min/km)"},
-          grid:{color:gridColor},
+          grid:{color:getGridColor()},
           ticks:{callback:v=>fmtPace(v)}
         }
       }

@@ -1,6 +1,6 @@
 // Cumulative tab: running km total within each year, one line per year.
 (function () {
-  const { filteredRuns, getSelectedYears, getAllYears, destroyChart, upsertChart, YEAR_COLORS, fmtKm, gridColor } = window.RD.state;
+  const { filteredRuns, getSelectedYears, getAllYears, destroyChart, upsertChart, YEAR_COLORS, fmtKm, getGridColor } = window.RD.state;
 
   function renderCumulata() {
     const runs = filteredRuns();
@@ -42,7 +42,7 @@
       plugins: { tooltip: { callbacks: { title: (items) => items[0].dataset.label, label: (ctx) => "day " + ctx.parsed.x + ": " + fmtKm(ctx.parsed.y) + " km" } } },
       scales: {
         x: { type:"linear", min:1, max:366, grid:{display:false}, title:{display:true, text:"day of year"} },
-        y: { beginAtZero:true, grid:{color:gridColor}, ticks:{callback:v=>v+" km"} }
+        y: { beginAtZero:true, grid:{color:getGridColor()}, ticks:{callback:v=>v+" km"} }
       }
     });
   }

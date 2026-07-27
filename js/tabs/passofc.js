@@ -1,6 +1,6 @@
 // "Pace, HR & cadence" tab: yearly pace, HR, HR-zone distribution, cadence.
 (function () {
-  const { filteredRuns, getSelectedYears, groupByYear, upsertChart, fmtPace, gridColor, HRZ_LABELS, HRZ_COLORS } = window.RD.state;
+  const { filteredRuns, getSelectedYears, groupByYear, upsertChart, fmtPace, getGridColor, HRZ_LABELS, HRZ_COLORS } = window.RD.state;
 
   function renderPassoFc() {
     const runs = filteredRuns();
@@ -13,7 +13,7 @@
       datasets: [{ label:"Pace", data: paceYears.map(y => (byYear.get(y).min*60)/byYear.get(y).km), borderColor:"#4a3aa7", backgroundColor:"#4a3aa7", borderWidth:2, pointRadius:3, tension:0.2 }]
     }, {
       plugins: { tooltip: { callbacks: { label: (ctx) => fmtPace(ctx.parsed.y) + " /km" } } },
-      scales: { y:{reverse:true, grid:{color:gridColor}, ticks:{callback:v=>fmtPace(v)}}, x:{grid:{display:false}} }
+      scales: { y:{reverse:true, grid:{color:getGridColor()}, ticks:{callback:v=>fmtPace(v)}}, x:{grid:{display:false}} }
     });
 
     const hrYears = years.filter(y => byYear.get(y) && byYear.get(y).hr.length);
@@ -25,7 +25,7 @@
       ]
     }, {
       plugins: { tooltip: { callbacks: { label: (ctx) => ctx.dataset.label + ": " + ctx.parsed.y.toFixed(0) + " bpm" } } },
-      scales: { y:{grid:{color:gridColor}, ticks:{callback:v=>v+" bpm"}}, x:{grid:{display:false}} }
+      scales: { y:{grid:{color:getGridColor()}, ticks:{callback:v=>v+" bpm"}}, x:{grid:{display:false}} }
     });
 
     const hrzLegend = document.getElementById("hrzLegend");
@@ -42,7 +42,7 @@
     }));
     upsertChart("chartHrZones", "bar", { labels: hrzYears, datasets: hrzDatasets }, {
       plugins: { tooltip: { callbacks: { label: (ctx) => ctx.dataset.label + ": " + ctx.parsed.y.toFixed(0) + "%" } } },
-      scales: { x:{stacked:true, grid:{display:false}}, y:{stacked:true, max:100, grid:{color:gridColor}, ticks:{callback:v=>v+"%"}} }
+      scales: { x:{stacked:true, grid:{display:false}}, y:{stacked:true, max:100, grid:{color:getGridColor()}, ticks:{callback:v=>v+"%"}} }
     });
 
     const cadYears = years.filter(y => byYear.get(y) && byYear.get(y).cad.length);
@@ -51,7 +51,7 @@
       datasets: [{ label:"Cadence", data: cadYears.map(y => { const c=byYear.get(y).cad; return c.reduce((a,b)=>a+b,0)/c.length; }), borderColor:"#1baf7a", backgroundColor:"#1baf7a", borderWidth:2, pointRadius:3, tension:0.2 }]
     }, {
       plugins: { tooltip: { callbacks: { label: (ctx) => ctx.parsed.y.toFixed(0) + " spm" } } },
-      scales: { y:{grid:{color:gridColor}, ticks:{callback:v=>v+" spm"}}, x:{grid:{display:false}} }
+      scales: { y:{grid:{color:getGridColor()}, ticks:{callback:v=>v+" spm"}}, x:{grid:{display:false}} }
     });
   }
 

@@ -1,6 +1,6 @@
 // Yearly tab: total km per year + km per month.
 (function () {
-  const { filteredRuns, getSelectedYears, groupByYear, upsertChart, fmtKm, gridColor } = window.RD.state;
+  const { filteredRuns, getSelectedYears, groupByYear, upsertChart, fmtKm, getGridColor } = window.RD.state;
 
   function renderAnnuale() {
     const runs = filteredRuns();
@@ -15,7 +15,7 @@
       datasets: [{ label: "Km", data: yearlyData, backgroundColor: "#2a78d6", borderRadius: 4, maxBarThickness: 34 }]
     }, {
       plugins: { tooltip: { callbacks: { label: (ctx) => fmtKm(ctx.parsed.y) + " km · " + yearlyRuns[ctx.dataIndex] + " runs" } } },
-      scales: { y: { beginAtZero:true, grid:{color:gridColor}, ticks:{callback:v=>v+" km"} }, x:{grid:{display:false}} }
+      scales: { y: { beginAtZero:true, grid:{color:getGridColor()}, ticks:{callback:v=>v+" km"} }, x:{grid:{display:false}} }
     });
 
     const monthMap = new Map();
@@ -30,7 +30,7 @@
       datasets: [{ label:"Km", data: months.map(m=>monthMap.get(m)), borderColor:"#2a78d6", backgroundColor:"rgba(42,120,214,0.1)", fill:true, borderWidth:2, pointRadius:0, tension:0.25 }]
     }, {
       plugins: { tooltip: { callbacks: { label: (ctx) => fmtKm(ctx.parsed.y) + " km" } } },
-      scales: { y:{beginAtZero:true, grid:{color:gridColor}, ticks:{callback:v=>v+" km"}}, x:{grid:{display:false}, ticks:{maxTicksLimit:10}} }
+      scales: { y:{beginAtZero:true, grid:{color:getGridColor()}, ticks:{callback:v=>v+" km"}}, x:{grid:{display:false}, ticks:{maxTicksLimit:10}} }
     });
   }
 

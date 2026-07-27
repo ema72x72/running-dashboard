@@ -1,6 +1,6 @@
 // Weekdays tab: total km per weekday.
 (function () {
-  const { filteredRuns, upsertChart, WD_LABELS, fmtKm, gridColor } = window.RD.state;
+  const { filteredRuns, upsertChart, WD_LABELS, fmtKm, getGridColor } = window.RD.state;
 
   function renderSettimana() {
     const runs = filteredRuns();
@@ -13,7 +13,7 @@
       datasets: [{ label:"Km", data: wd, backgroundColor:"#2a78d6", borderRadius:4, maxBarThickness:50 }]
     }, {
       plugins: { tooltip: { callbacks: { label: (ctx) => fmtKm(ctx.parsed.y) + " km · " + wdN[ctx.dataIndex] + " runs" } } },
-      scales: { y:{beginAtZero:true, grid:{color:gridColor}, ticks:{callback:v=>v+" km"}}, x:{grid:{display:false}} }
+      scales: { y:{beginAtZero:true, grid:{color:getGridColor()}, ticks:{callback:v=>v+" km"}}, x:{grid:{display:false}} }
     });
   }
 

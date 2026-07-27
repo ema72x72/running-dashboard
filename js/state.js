@@ -17,8 +17,18 @@
   const HRZ_LABELS = ["Easy <130","Moderate 130-145","Steady 145-160","Hard 160-175","Maximum 175+"];
   const HRZ_COLORS = ["#60a5fa","#34d399","#fbbf24","#fb923c","#e34948"];
 
-  const isDark = matchMedia("(prefers-color-scheme: dark)").matches;
-  const gridColor = isDark ? "#2c2c2a" : "#e1e0d9";
+  const darkMediaQuery = matchMedia("(prefers-color-scheme: dark)");
+
+  // Mirrors the CSS rule in style.css: an explicit choice from the theme
+  // toggle (data-theme attribute, set by js/theme.js) wins over the
+  // system/browser preference. Kept as a function rather than a value
+  // snapshotted once at page load, so charts re-rendered after a theme
+  // toggle pick up the right grid color instead of the original one.
+  function getGridColor() {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    const isDark = explicit ? explicit === "dark" : darkMediaQuery.matches;
+    return isDark ? "#2c2c2a" : "#e1e0d9";
+  }
   const mutedColor = "#898781";
   Chart.defaults.color = mutedColor;
 
@@ -88,6 +98,15 @@
     if (charts[id]) { charts[id].destroy(); delete charts[id]; }
   }
 
+  // Used by js/theme.js after a theme toggle: existing Chart.js instances
+  // baked in the old grid color at creation time, so the simplest correct
+  // fix is to drop them all and let the next render (triggered by
+  // markAllDirty + renderActiveTab) recreate them with getGridColor()'s
+  // current value.
+  function destroyAllCharts() {
+    Object.keys(charts).forEach(destroyChart);
+  }
+
   function upsertChart(canvasId, type, data, options) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
@@ -111,9 +130,9 @@
     setAllYears: (v) => { ALL_YEARS = v; },
     getSelectedYears: () => selectedYears,
     setSelectedYears: (v) => { selectedYears = v; },
-    YEAR_COLORS, WD_LABELS, HRZ_LABELS, HRZ_COLORS, gridColor,
+    YEAR_COLORS, WD_LABELS, HRZ_LABELS, HRZ_COLORS, getGridColor,
     dirty, markAllDirty, filteredRuns,
     fmtPace, fmtKm, fmtDate, runDateToLocalTime, groupByYear, fetchJson,
-    upsertChart, destroyChart,
+    upsertChart, destroyChart, destroyAllCharts,
   };
 })();

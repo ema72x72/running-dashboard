@@ -30,6 +30,12 @@
     dirty[activeTab] = false;
   }
 
+  // Exposed so js/theme.js can force a re-render of whichever tab is
+  // currently visible right after a theme toggle (paired with
+  // markAllDirty() + destroyAllCharts(), so the other tabs pick up the
+  // new grid color lazily whenever the user switches to them).
+  window.RD.renderActiveTab = renderActiveTab;
+
   // ---------- Year filter UI ----------
   const yearRow = document.getElementById("yearRow");
   let allChip = null;

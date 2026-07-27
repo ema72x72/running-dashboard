@@ -24,6 +24,9 @@
       <div class="brandline"><span class="brandmark" aria-hidden="true">🏃</span><h1>Running Dashboard</h1></div>
       <p class="syncstatus"><span class="syncdot loading" id="syncDot"></span><span id="stravaStatus">Loading data…</span></p>
     </div>
+    <button class="themebtn" id="themeBtn" type="button" aria-label="Toggle dark/light theme">
+      <span id="themeIcon" aria-hidden="true">🌙</span>
+    </button>
     <button class="stravabtn" id="stravaBtn" type="button" aria-label="Update data from Strava">
       <span class="spin" id="stravaSpin"></span><span class="refreshicon" id="refreshIcon" aria-hidden="true">↻</span><span id="stravaBtnLabel">Update</span>
     </button>
@@ -157,6 +160,7 @@
      instead of a real server. Load order matters: state.js first, then
      the tab files (any order among themselves), then main.js last. -->
 <script src="js/state.js"></script>
+<script src="js/theme.js"></script>
 <script src="js/tabs/totali.js"></script>
 <script src="js/tabs/runs.js"></script>
 <script src="js/tabs/annuale.js"></script>

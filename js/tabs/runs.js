@@ -1,6 +1,6 @@
 // Runs tab: browse every historical run, its GPS route, splits and insights.
 (function () {
-  const { filteredRuns, getRuns, runDateToLocalTime, fetchJson, fmtPace, gridColor, dirty } = window.RD.state;
+  const { filteredRuns, getRuns, runDateToLocalTime, fetchJson, fmtPace, getGridColor, dirty } = window.RD.state;
 
   let selectedRunId = null;
   let runTrackCache = new Map();
@@ -203,7 +203,7 @@
     const canvas=document.getElementById("runPerformanceChart"); if(!canvas) return;
     const data=trackSeries(track,runMetric); if(runDetailChart) runDetailChart.destroy();
     const label={pace:"Pace",hr:"Heart rate",elevation:"Elevation",cadence:"Cadence"}[runMetric]||runMetric;
-    runDetailChart=new Chart(canvas,{type:"line",data:{datasets:[{data,borderColor:runMetric==="hr"?"#ef4444":"#2a78d6",borderWidth:2,pointRadius:0,tension:.28,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"nearest",intersect:false},onHover:(event,elements)=>{ if(elements.length) showRunPoint(track,data[elements[0].index]); else if(runHoverMarker) runHoverMarker.setStyle({opacity:0,fillOpacity:0}); },plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${label}: ${runMetric==="pace"?fmtPace(c.parsed.y):Math.round(c.parsed.y)}`}}},scales:{x:{type:"linear",title:{display:true,text:"km"},grid:{color:gridColor}},y:{reverse:runMetric==="pace",grid:{color:gridColor},ticks:{callback:v=>runMetric==="pace"?fmtPace(v):v}}}}});
+    runDetailChart=new Chart(canvas,{type:"line",data:{datasets:[{data,borderColor:runMetric==="hr"?"#ef4444":"#2a78d6",borderWidth:2,pointRadius:0,tension:.28,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"nearest",intersect:false},onHover:(event,elements)=>{ if(elements.length) showRunPoint(track,data[elements[0].index]); else if(runHoverMarker) runHoverMarker.setStyle({opacity:0,fillOpacity:0}); },plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${label}: ${runMetric==="pace"?fmtPace(c.parsed.y):Math.round(c.parsed.y)}`}}},scales:{x:{type:"linear",title:{display:true,text:"km"},grid:{color:getGridColor()}},y:{reverse:runMetric==="pace",grid:{color:getGridColor()},ticks:{callback:v=>runMetric==="pace"?fmtPace(v):v}}}}});
   }
   function buildSplits(track) {
     const points=track?.points||[]; if(points.length<2) return [];

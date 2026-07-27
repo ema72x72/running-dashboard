@@ -40,8 +40,15 @@ jobs:
 
       - name: Commit updated data
         run: |
-          if [ -z "$(git status --porcelain -- data/runs.json data/metadata.json data/tracks)" ]; then
-            echo "No data, metadata, or track changes"
+          mkdir -p data
+          mkdir -p data/tracks
+
+          if [ ! -f data/location_cache.json ]; then
+            echo '{}' > data/location_cache.json
+          fi
+
+          if [ -z "$(git status --porcelain -- data/runs.json data/metadata.json data/location_cache.json data/tracks)" ]; then
+            echo "No data, metadata, location cache, or track changes"
             exit 0
           fi
 
@@ -50,6 +57,7 @@ jobs:
 
           git add data/runs.json
           git add data/metadata.json
+          git add data/location_cache.json
           git add data/tracks
 
           git commit -m "Update Strava running data"

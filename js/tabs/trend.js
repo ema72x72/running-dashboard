@@ -97,6 +97,17 @@
   }
 
   /* ---------- Rolling series (dense, one point per calendar day) ---------- */
+  // Below this, a nonzero windowKm/windowMin is floating-point noise, not a
+  // real distance: after thousands of sequential += / -= operations across
+  // the whole series, a window that should sum to exactly 0 can be left
+  // with a residual like -1e-13. That's harmless for volume (it just rounds
+  // away), but fatal for pace, which divides by windowKm — dividing by a
+  // near-zero residual instead of a true zero produces huge, effectively
+  // random values (this is exactly what caused the flat-topped spikes
+  // during rest periods). Every run is at least 0.3km (see MIN_RUN_KM in
+  // state.js), so anything under this epsilon can only be rounding noise.
+  const ZERO_EPSILON = 1e-6;
+
   function computeRollingWeeklyVolume(dailyData, windowDays) {
     if (!dailyData.length) return [];
     const firstDay = dailyData[0].dayIdx;
@@ -114,10 +125,11 @@
         windowRuns -= dailyData[exitPtr].runs;
         exitPtr++;
       }
+      const cleanKm = Math.abs(windowKm) < ZERO_EPSILON ? 0 : windowKm;
       series.push({
         x: day,
-        y: Math.round(((windowKm / windowDays) * 7) * 10) / 10,
-        kmInWindow: Math.round(windowKm * 10) / 10,
+        y: Math.round(((cleanKm / windowDays) * 7) * 10) / 10,
+        kmInWindow: Math.round(cleanKm * 10) / 10,
         runsInWindow: windowRuns
       });
     }
@@ -144,13 +156,15 @@
         windowHrWeighted -= e.hrWeighted; windowHrMin -= e.hrMin;
         exitPtr++;
       }
-      const seconds = windowKm > 0 ? (windowMin * 60) / windowKm : null;
+      const cleanKm = Math.abs(windowKm) < ZERO_EPSILON ? 0 : windowKm;
+      const cleanHrMin = Math.abs(windowHrMin) < ZERO_EPSILON ? 0 : windowHrMin;
+      const seconds = cleanKm > 0 ? (windowMin * 60) / cleanKm : null;
       series.push({
         x: day,
         y: seconds !== null ? Math.round(seconds * 10) / 10 : null,
-        kmInWindow: Math.round(windowKm * 10) / 10,
+        kmInWindow: Math.round(cleanKm * 10) / 10,
         runsInWindow: windowRuns,
-        avgHr: windowHrMin > 0 ? windowHrWeighted / windowHrMin : null
+        avgHr: cleanHrMin > 0 ? windowHrWeighted / cleanHrMin : null
       });
     }
     return series;
@@ -170,8 +184,8 @@
     const previousKm = sumInRange(dailyData, currentDay - 2 * windowDays + 1, currentDay - windowDays, "paceKm");
     const previousMin = sumInRange(dailyData, currentDay - 2 * windowDays + 1, currentDay - windowDays, "paceMin");
     return {
-      current: currentKm > 0 ? (currentMin * 60) / currentKm : null,
-      previous: previousKm > 0 ? (previousMin * 60) / previousKm : null
+      current: currentKm > ZERO_EPSILON ? (currentMin * 60) / currentKm : null,
+      previous: previousKm > ZERO_EPSILON ? (previousMin * 60) / previousKm : null
     };
   }
 
@@ -254,16 +268,22 @@
     const comparison = computeVolumeComparison(dailyData, currentDay, windowDays);
     const delta = comparison.current - comparison.previous;
     let changeValue, changeStatus;
-    if (comparison.previous === 0) {
-      changeValue = comparison.current > 0 ? "new" : "—";
-      changeStatus = comparison.current > 0 ? "positive" : "";
+    if (Math.abs(comparison.previous) < ZERO_EPSILON) {
+      changeValue = comparison.current > ZERO_EPSILON ? "new" : "—";
+      changeStatus = comparison.current > ZERO_EPSILON ? "positive" : "";
     } else {
       changeValue = formatSignedPercentage((delta / comparison.previous) * 100);
       changeStatus = delta >= 0 ? "positive" : "negative";
     }
 
     const peak = findSeriesPeak(series);
-    const low = findSeriesLow(series);
+    // Low excludes true rest stretches (0 km/week): over a 12-year history
+    // there's always at least one period of total inactivity (injury,
+    // break...), so an "includes zero" Low is always 0 and never tells you
+    // anything - the chart itself already shows those dips. Reporting the
+    // quietest ACTIVE period instead is the informative version of this card.
+    const activePoints = series.filter(p => p.y > ZERO_EPSILON);
+    const low = findSeriesLow(activePoints.length ? activePoints : series);
 
     statsEl.innerHTML = [
       makeTrendCard({
@@ -281,7 +301,7 @@
         value: peak ? `${fmtKm(peak.y)} km/week` : "—", sub: peak ? dayIdxToFullDate(peak.x) : ""
       }),
       makeTrendCard({
-        icon: "↘", label: `Low (${windowInfo.shortLabel})`,
+        icon: "↘", label: `Low, active weeks (${windowInfo.shortLabel})`,
         value: low ? `${fmtKm(low.y)} km/week` : "—", sub: low ? dayIdxToFullDate(low.x) : ""
       })
     ].join("");

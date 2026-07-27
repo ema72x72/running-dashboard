@@ -337,19 +337,22 @@ def convert_activity(
     source = {**activity, **details}
 
     streams = get_activity_streams(
-        activity_id,
-        access_token,
+    activity_id,
+    access_token,
     )
 
     track_payload = build_track_payload(
-        source,
-        streams,
+    source,
+    streams,
     )
 
+    if track_payload.get("points"):
     track_file = save_track(
         activity_id,
         track_payload,
-    )
+        )
+    else:
+        track_file = None
 
     start_latlng = source.get("start_latlng") or [None, None]
 

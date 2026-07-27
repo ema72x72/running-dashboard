@@ -142,18 +142,58 @@ def get_hr_zones(activity_id: int, access_token: str) -> list[float]:
         print(f"Warning: no HR streams for activity {activity_id}: {error}")
         return [0.0, 0.0, 0.0, 0.0, 0.0]
 
+def get_activity_details(
+    activity_id: int,
+    access_token: str,
+) -> dict[str, Any]:
+    try:
+        details = api_get(
+            f"/activities/{activity_id}",
+            access_token,
+        )
 
-def convert_activity(activity: dict[str, Any], access_token: str) -> dict[str, Any]:
+        if isinstance(details, dict):
+            return details
+
+    except requests.HTTPError as error:
+        print(
+            f"Warning: cannot download details "
+            f"for activity {activity_id}: {error}"
+        )
+
+    return {}
+    
+def convert_activity(
+    activity: dict[str, Any],
+    access_token: str,
+) -> dict[str, Any]:
     date_string = activity["start_date_local"][:10]
     year, day_of_year, weekday = date_fields(date_string)
 
-    start_latlng = activity.get("start_latlng") or [None, None]
     activity_id = int(activity["id"])
 
-    average_cadence = activity.get("average_cadence")
+    details = get_activity_details(
+        activity_id,
+        access_token,
+    )
+
+    # Il dettaglio attività è più completo del record restituito
+    # da /athlete/activities. In caso di errore, usiamo il record base.
+    source = {**activity, **details}
+
+    start_latlng = source.get("start_latlng") or [None, None]
+
+    average_cadence = source.get("average_cadence")
     cadence_spm = (
         round(float(average_cadence) * 2, 1)
         if isinstance(average_cadence, (int, float))
+        else None
+    )
+
+    gear = source.get("gear")
+    gear_name = (
+        gear.get("name")
+        if isinstance(gear, dict)
         else None
     )
 
@@ -163,27 +203,43 @@ def convert_activity(activity: dict[str, Any], access_token: str) -> dict[str, A
         "y": year,
         "doy": day_of_year,
         "wd": weekday,
-        "km": round(float(activity.get("distance", 0)) / 1000, 3),
-        "min": round(float(activity.get("moving_time", 0)) / 60, 2),
-        "elapsed_min": round(
-            float(activity.get("elapsed_time", 0)) / 60,
+
+        "km": round(
+            float(source.get("distance", 0)) / 1000,
+            3,
+        ),
+        "min": round(
+            float(source.get("moving_time", 0)) / 60,
             2,
         ),
-        "hr": activity.get("average_heartrate"),
-        "mhr": activity.get("max_heartrate"),
+        "elapsed_min": round(
+            float(source.get("elapsed_time", 0)) / 60,
+            2,
+        ),
+
+        "hr": source.get("average_heartrate"),
+        "mhr": source.get("max_heartrate"),
         "cad": cadence_spm,
+
         "lat": start_latlng[0],
         "lon": start_latlng[1],
-        "start_local": activity.get("start_date_local"),
-        "name": activity.get("name"),
+
+        "start_local": source.get("start_date_local"),
+        "name": source.get("name"),
+
         "elev": round(
-            float(activity.get("total_elevation_gain", 0)),
+            float(source.get("total_elevation_gain", 0)),
             1,
         ),
-        "calories": None,
-        "description": None,
-        "gear_name": None,
-        "hrz": get_hr_zones(activity_id, access_token),
+
+        "calories": source.get("calories"),
+        "description": source.get("description"),
+        "gear_name": gear_name,
+
+        "hrz": get_hr_zones(
+            activity_id,
+            access_token,
+        ),
     }
 
     return run

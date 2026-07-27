@@ -5,12 +5,17 @@ Single-page running dashboard (`index.html`) backed by data synced from Strava.
 ## Data pipeline
 
 - `scripts/sync_strava.py` — runs on a schedule via `.github/workflows/sync-strava.yml`.
-  Pulls new/updated activities from Strava, writes `data/runs.json`,
-  `data/metadata.json` and per-run GPS tracks in `data/tracks/<id>.json`.
-  Also reverse-geocodes each run's start coordinates (via `location_utils.py`)
-  and writes `location_city` / `location_state` / `location_country` /
+  Purely incremental: downloads only the running activities newer than the
+  last one already saved, writes `data/runs.json`, `data/metadata.json` and
+  per-run GPS tracks in `data/tracks/<id>.json`. Also reverse-geocodes each
+  new run's start coordinates (via `location_utils.py`) and writes
+  `location_city` / `location_state` / `location_country` /
   `location_country_code`, caching lookups in `data/location_cache.json` so
-  Nominatim is only queried once per ~100 m grid cell.
+  Nominatim is only queried once per ~100 m grid cell. It does not re-check
+  or re-download activities that are already in `data/runs.json` — if you
+  edit a run on Strava after it's been synced, the correction won't be
+  picked up automatically. Historical backfill is not its job either; that
+  is what `tcx_import.py` below is for.
 
 - `scripts/tcx_import.py` — **local-only** maintenance script, not part of
   the GitHub Action. Backfills `data/tracks/*.json` for historical runs from

@@ -440,67 +440,40 @@ def convert_activity(
 
 
 def main() -> None:
+    """Incremental sync: download only activities newer than the last one
+    already saved, convert them, and append them.
+
+    This intentionally does not try to re-process or "catch up" runs that
+    are already in data/runs.json (no backfill-from-empty fallback, no
+    re-downloading tracks for already-synced activities). Historical data
+    is built and maintained separately by tcx_import.py; this script's only
+    job is to keep adding what's new since the last run.
+    """
     runs = load_runs()
     existing_ids = {str(run["id"]) for run in runs if run.get("id") is not None}
     dated_runs = [run["d"] for run in runs if isinstance(run.get("d"), str)]
 
-    if dated_runs:
-        last_date = max(dated_runs)
-        after_epoch = int(
-            datetime.strptime(last_date, "%Y-%m-%d")
-            .replace(tzinfo=timezone.utc)
-            .timestamp()
-        ) - 86_400
-    else:
-        after_epoch = 0
+    last_date = max(dated_runs)
+    after_epoch = int(
+        datetime.strptime(last_date, "%Y-%m-%d")
+        .replace(tzinfo=timezone.utc)
+        .timestamp()
+    ) - 86_400
 
     token_data = refresh_access_token()
     access_token = token_data["access_token"]
     activities = download_activities(access_token, after_epoch)
-    activity_map = {
-    str(a["id"]): a
-    for a in activities
-    }
     location_cache = load_location_cache()
 
     added = 0
-    updated = 0
 
     for activity in activities:
-
         activity_id = str(activity["id"])
         sport_type = activity.get("sport_type", "")
 
         if "Run" not in sport_type:
             continue
-
         if activity_id in existing_ids:
-
-            for i, run in enumerate(runs):
-
-                if str(run.get("id")) == activity_id:
-
-                    new_run = convert_activity(
-                        activity,
-                        access_token,
-                        location_cache,
-                    )
-
-                    # Preserva il track già scaricato se questo giro non
-                    # ha ottenuto stream validi (es. errore temporaneo
-                    # dell'API). setdefault() qui non basterebbe: new_run
-                    # ha sempre la chiave "track_file", anche se None.
-                    if not new_run.get("track_file") and run.get("track_file"):
-                        new_run["track_file"] = run["track_file"]
-
-                    runs[i] = {
-                        **run,
-                        **new_run,
-                    }
-
-                    updated += 1
-                    break
-
             continue
 
         runs.append(
@@ -517,11 +490,7 @@ def main() -> None:
     save_runs(runs)
     save_metadata(runs, added)
     save_location_cache(location_cache)
-    print(
-        f"Sync complete: "
-        f"{added} added, "
-        f"{updated} updated"
-    )
+    print(f"Sync complete: {added} added")
     print(f"Total runs: {len(runs)}")
 
 

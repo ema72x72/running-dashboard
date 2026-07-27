@@ -137,25 +137,34 @@
     // "Current trend" compares a 90-day window against the previous
     // 90-day window - the same idea used in the Trend tab, at its default
     // window length, kept here as a quick one-line summary.
+    // "Current trend" compares the last 90 days against the trailing
+    // 365-day average rather than the previous 90-day period: a
+    // period-over-period comparison can say "falling" right after an
+    // unusually strong quarter even while you're still running well above
+    // your normal recent pace, which reads as a contradiction. Comparing
+    // against your own trailing-year average answers the question people
+    // actually mean by "trend": am I running more or less than usual.
     const windowDays = 90;
     const curStart = todayStart - (windowDays - 1) * DAY;
-    const prevStart = curStart - windowDays * DAY;
+    const baselineStart = todayStart - 364 * DAY;
     const curVol = statsInRange(runs, curStart, todayStart + DAY).km;
-    const prevVol = statsInRange(runs, prevStart, curStart).km;
+    const baselineVol = statsInRange(runs, baselineStart, todayStart + DAY).km;
+    const curRate = curVol / (windowDays / 7);
+    const baselineRate = baselineVol / (365 / 7);
     let volumeLabel = "Volume stable";
-    if (prevVol > 0) {
-      const pct = ((curVol - prevVol) / prevVol) * 100;
-      if (pct >= 5) volumeLabel = "Volume rising";
-      else if (pct <= -5) volumeLabel = "Volume falling";
-    } else if (curVol > 0) {
+    if (baselineRate > 0) {
+      const pct = ((curRate - baselineRate) / baselineRate) * 100;
+      if (pct >= 10) volumeLabel = "Volume rising";
+      else if (pct <= -10) volumeLabel = "Volume falling";
+    } else if (curRate > 0) {
       volumeLabel = "Volume rising";
     }
 
     const curPace = paceInRange(runs, curStart, todayStart + DAY);
-    const prevPace = paceInRange(runs, prevStart, curStart);
+    const baselinePace = paceInRange(runs, baselineStart, todayStart + DAY);
     let paceLabel = "Pace stable";
-    if (curPace !== null && prevPace !== null) {
-      const delta = curPace - prevPace;
+    if (curPace !== null && baselinePace !== null) {
+      const delta = curPace - baselinePace;
       if (delta <= -5) paceLabel = "Pace improving";
       else if (delta >= 5) paceLabel = "Pace declining";
     }
@@ -255,12 +264,23 @@
 
     let bestYear = otherYears[0];
     const finalByYear = new Map();
-    otherYears.forEach(y => finalByYear.set(y, buildDoyCumulative(byYear.get(y))[366]));
+    const dailyByOtherYear = new Map();
+    otherYears.forEach(y => {
+      const daily = buildDoyCumulative(byYear.get(y));
+      dailyByOtherYear.set(y, daily);
+      finalByYear.set(y, daily[366]);
+    });
     otherYears.forEach(y => { if (finalByYear.get(y) > finalByYear.get(bestYear)) bestYear = y; });
     const bestKm = finalByYear.get(bestYear);
-    const bestDaily = buildDoyCumulative(byYear.get(bestYear));
+    const bestDaily = dailyByOtherYear.get(bestYear);
 
-    const distance = bestKm - currentKm;
+    // Two different comparisons on purpose: the headline is "at the same
+    // point in the year" (apples to apples, like the Cumulative tab's own
+    // "vs best year" card), while the km/week figure is always about
+    // catching the best year's eventual FULL total by year-end, which is
+    // what "beat your best year" as a season-long goal actually means.
+    const distanceSameDate = bestDaily[Math.min(lastDoy, 366)] - currentKm;
+    const distanceToRecord = bestKm - currentKm;
     const daysInYear = isLeapYear(currentYear) ? 366 : 365;
     const remainingWeeks = Math.max(0, daysInYear - lastDoy) / 7;
 
@@ -272,19 +292,23 @@
     const paceLabelEl = document.getElementById("seasonGoalPaceLabel");
     const legendEl = document.getElementById("seasonGoalLegend");
 
-    if (distance <= 0) {
+    if (distanceToRecord <= 0) {
       titleEl.textContent = "New yearly record";
       subtitleEl.textContent = `You've already beaten ${bestYear}`;
-      metricValueEl.textContent = `+${fmtKm(Math.abs(distance))} km`;
+      metricValueEl.textContent = `+${fmtKm(Math.abs(distanceToRecord))} km`;
       metricLabelEl.textContent = `ahead of your best year`;
       paceValueEl.textContent = "🎉";
       paceLabelEl.textContent = "keep it up";
     } else {
       titleEl.textContent = "Season goal";
       subtitleEl.textContent = "Beat your best year";
-      metricValueEl.textContent = `${fmtKm(distance)} km`;
-      metricLabelEl.textContent = "behind your best year";
-      const perWeek = remainingWeeks > 0 ? distance / remainingWeeks : null;
+      metricValueEl.textContent = distanceSameDate <= 0
+        ? `+${fmtKm(Math.abs(distanceSameDate))} km`
+        : `${fmtKm(distanceSameDate)} km`;
+      metricLabelEl.textContent = distanceSameDate <= 0
+        ? `ahead of ${bestYear}'s pace`
+        : `behind ${bestYear}'s pace`;
+      const perWeek = remainingWeeks > 0 ? distanceToRecord / remainingWeeks : null;
       paceValueEl.textContent = perWeek !== null ? `~${perWeek.toLocaleString("en-IT", {maximumFractionDigits:0})} km/week` : "—";
       paceLabelEl.textContent = `to beat ${bestYear}`;
     }

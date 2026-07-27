@@ -1,111 +1,65 @@
 #!/usr/bin/env python3
+"""One-off / periodic maintenance script: backfill location_city/state/country
+for every run in data/runs.json that has GPS coordinates but no location yet.
+
+This used to duplicate the reverse-geocoding logic with its own (incompatible)
+field names and cache format. It now shares a single implementation with the
+automated sync (see location_utils.py and sync_strava.py), so the cache and
+the fields written here are exactly what the frontend reads.
+
+Run this locally whenever you want to backfill older runs that predate the
+automated sync's own location lookups (e.g. right after importing historical
+tracks with tcx_import.py). It is safe to re-run: cached coordinates are
+never re-queried.
+"""
+from __future__ import annotations
 
 import json
-import time
 from pathlib import Path
 
-import requests
+from location_utils import (
+    apply_location_fields,
+    load_location_cache,
+    resolve_location,
+    save_location_cache,
+)
 
 RUNS_FILE = Path("data/runs.json")
-CACHE_FILE = Path("data/location_cache.json")
-
-USER_AGENT = "running-dashboard/1.0 (personal project)"
 
 
-def load_cache():
-    if CACHE_FILE.exists():
-        with open(CACHE_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
+def main() -> None:
+    with RUNS_FILE.open("r", encoding="utf-8") as file:
+        runs = json.load(file)
 
-
-def save_cache(cache):
-    with open(CACHE_FILE, "w", encoding="utf-8") as f:
-        json.dump(cache, f, indent=2, ensure_ascii=False)
-
-
-def cache_key(lat, lon):
-    # circa 100 metri
-    return f"{round(lat,3):.3f},{round(lon,3):.3f}"
-
-
-def reverse_geocode(lat, lon):
-
-    r = requests.get(
-        "https://nominatim.openstreetmap.org/reverse",
-        params={
-            "format": "jsonv2",
-            "lat": lat,
-            "lon": lon,
-            "zoom": 10,
-            "addressdetails": 1,
-        },
-        headers={
-            "User-Agent": USER_AGENT
-        },
-        timeout=20,
-    )
-
-    r.raise_for_status()
-
-    address = r.json().get("address", {})
-
-    return (
-        address.get("city")
-        or address.get("town")
-        or address.get("village")
-        or address.get("municipality")
-        or address.get("county")
-        or address.get("state")
-    )
-
-
-def main():
-
-    with open(RUNS_FILE, "r", encoding="utf-8") as f:
-        runs = json.load(f)
-
-    cache = load_cache()
-
+    cache = load_location_cache()
     queried = 0
     updated = 0
 
     for run in runs:
-
-        if run.get("location"):
+        if run.get("location_city") or run.get("location_country"):
             continue
 
-        lat = run.get("lat")
-        lon = run.get("lon")
-
+        lat, lon = run.get("lat"), run.get("lon")
         if lat is None or lon is None:
             continue
 
-        key = cache_key(lat, lon)
+        try:
+            location, used_network = resolve_location(lat, lon, cache)
+        except Exception as error:
+            print(f"Warning: reverse geocoding failed for {run.get('d')}: {error}")
+            continue
 
-        if key not in cache:
-
-            print(f"Looking up {lat:.4f}, {lon:.4f}")
-
-            try:
-                cache[key] = reverse_geocode(lat, lon)
-
-            except Exception as e:
-                print(e)
-                cache[key] = None
-
+        if used_network:
             queried += 1
+            save_location_cache(cache)  # persist incrementally in case of interruption
 
-            save_cache(cache)
+        if apply_location_fields(run, location):
+            updated += 1
 
-            # rispetto della policy di Nominatim
-            time.sleep(1)
+    with RUNS_FILE.open("w", encoding="utf-8") as file:
+        json.dump(runs, file, ensure_ascii=False, separators=(",", ":"))
 
-        run["location"] = cache[key]
-        updated += 1
-
-    with open(RUNS_FILE, "w", encoding="utf-8") as f:
-        json.dump(runs, f, indent=2, ensure_ascii=False)
+    save_location_cache(cache)
 
     print()
     print("--------------------------------")

@@ -9,6 +9,13 @@ from typing import Any
 
 import requests
 
+from location_utils import (
+    apply_location_fields,
+    load_location_cache,
+    resolve_location,
+    save_location_cache,
+)
+
 CLIENT_ID = os.environ["STRAVA_CLIENT_ID"]
 CLIENT_SECRET = os.environ["STRAVA_CLIENT_SECRET"]
 REFRESH_TOKEN = os.environ["STRAVA_REFRESH_TOKEN"]
@@ -321,6 +328,7 @@ def save_track(
 def convert_activity(
     activity: dict[str, Any],
     access_token: str,
+    location_cache: dict[str, Any],
 ) -> dict[str, Any]:
     date_string = activity["start_date_local"][:10]
     year, day_of_year, weekday = date_fields(date_string)
@@ -414,6 +422,18 @@ def convert_activity(
         "hrz": get_hr_zones_from_streams(streams),
     }
 
+    if run["lat"] is not None and run["lon"] is not None:
+        try:
+            location, _used_network = resolve_location(
+                run["lat"], run["lon"], location_cache,
+            )
+            apply_location_fields(run, location)
+        except Exception as error:
+            print(
+                f"Warning: reverse geocoding failed for activity "
+                f"{activity_id}: {error}"
+            )
+
     return run
 
 
@@ -441,6 +461,7 @@ def main() -> None:
     str(a["id"]): a
     for a in activities
     }
+    location_cache = load_location_cache()
 
     added = 0
     updated = 0
@@ -462,13 +483,15 @@ def main() -> None:
                     new_run = convert_activity(
                         activity,
                         access_token,
+                        location_cache,
                     )
 
-                    # mantiene eventuali campi già presenti
-                    new_run.setdefault(
-                        "track_file",
-                        run.get("track_file"),
-                    )
+                    # Preserva il track già scaricato se questo giro non
+                    # ha ottenuto stream validi (es. errore temporaneo
+                    # dell'API). setdefault() qui non basterebbe: new_run
+                    # ha sempre la chiave "track_file", anche se None.
+                    if not new_run.get("track_file") and run.get("track_file"):
+                        new_run["track_file"] = run["track_file"]
 
                     runs[i] = {
                         **run,
@@ -484,14 +507,16 @@ def main() -> None:
             convert_activity(
                 activity,
                 access_token,
+                location_cache,
             )
-        )    
+        )
 
         existing_ids.add(activity_id)
         added += 1
 
     save_runs(runs)
     save_metadata(runs, added)
+    save_location_cache(location_cache)
     print(
         f"Sync complete: "
         f"{added} added, "

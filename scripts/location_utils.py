@@ -138,12 +138,14 @@ def resolve_location(
 
 
 def apply_location_fields(run: dict[str, Any], location: dict[str, Any] | None) -> bool:
+    """Write reverse-geocoding results onto a run using the field names the
+    frontend actually reads (see runLocation() in index.html)."""
     if not location:
         return False
 
     changed = False
     mapping = {
-        "place": location.get("place"),
+        "location_city": location.get("place"),
         "location_country": location.get("country"),
         "location_country_code": location.get("country_code"),
         "location_state": location.get("state"),

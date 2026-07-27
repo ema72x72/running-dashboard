@@ -1,1 +1,1594 @@
-{}
+{
+  "-16.913,145.771": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Cairns, Queensland, 4870, Australia",
+    "place": "Cairns",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-22.943,-43.180": {
+    "country": "Brazil",
+    "country_code": "br",
+    "display_name": "Rio de Janeiro, Southeast Region, Brazil",
+    "place": "Rio de Janeiro",
+    "source": "nominatim",
+    "state": "Rio de Janeiro"
+  },
+  "-27.179,153.373": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.431,153.530": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.434,153.073": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.456,153.051": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.459,153.051": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.461,153.027": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.462,153.026": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.462,153.027": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.463,153.028": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.465,153.052": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.466,153.050": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.466,153.051": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.467,153.036": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.467,153.037": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.467,153.047": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.467,153.051": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.469,153.026": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.470,153.050": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.470,153.053": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.471,153.051": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.471,153.053": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.474,153.048": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.475,153.043": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.475,153.044": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.475,153.045": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.475,153.046": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.476,153.046": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.477,153.023": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.490,153.003": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.495,153.016": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-27.496,153.016": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Brisbane, Queensland, Australia",
+    "place": "Brisbane",
+    "source": "nominatim",
+    "state": "Queensland"
+  },
+  "-33.882,151.209": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Sydney, New South Wales, Australia",
+    "place": "Sydney",
+    "source": "nominatim",
+    "state": "New South Wales"
+  },
+  "-33.882,151.210": {
+    "country": "Australia",
+    "country_code": "au",
+    "display_name": "Sydney, New South Wales, Australia",
+    "place": "Sydney",
+    "source": "nominatim",
+    "state": "New South Wales"
+  },
+  "12.949,100.885": {
+    "country": "Thailand",
+    "country_code": "th",
+    "display_name": "Na Kluea Subdistrict, Pattaya City, Nong Pla Lai, Bang Lamung District, Chon Buri Province, Thailand",
+    "place": "Pattaya City",
+    "source": "nominatim",
+    "state": null
+  },
+  "22.302,114.192": {
+    "country": "China",
+    "country_code": "cn",
+    "display_name": "Kowloon City District, Kowloon, Hong Kong, China",
+    "place": "Hong Kong",
+    "source": "nominatim",
+    "state": null
+  },
+  "25.404,49.567": {
+    "country": "Saudi Arabia",
+    "country_code": "sa",
+    "display_name": "Al-Hofuf, Al Ahsa Governorate, Eastern Province, 36361-7365, Saudi Arabia",
+    "place": "Al-Hofuf",
+    "source": "nominatim",
+    "state": "Eastern Province"
+  },
+  "25.405,49.567": {
+    "country": "Saudi Arabia",
+    "country_code": "sa",
+    "display_name": "Al-Hofuf, Al Ahsa Governorate, Eastern Province, 36361-7365, Saudi Arabia",
+    "place": "Al-Hofuf",
+    "source": "nominatim",
+    "state": "Eastern Province"
+  },
+  "32.066,34.761": {
+    "country": "Israel",
+    "country_code": "il",
+    "display_name": "Tel-Aviv, Tel Aviv Subdistrict, Tel-Aviv District, Israel",
+    "place": "Tel-Aviv",
+    "source": "nominatim",
+    "state": "Tel-Aviv District"
+  },
+  "36.156,-115.332": {
+    "country": "United States",
+    "country_code": "us",
+    "display_name": "Clark County, Nevada, United States",
+    "place": "Clark County",
+    "source": "nominatim",
+    "state": "Nevada"
+  },
+  "37.245,13.611": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Agrigento, Sicily, 92100, Italy",
+    "place": "Agrigento",
+    "source": "nominatim",
+    "state": "Sicily"
+  },
+  "37.245,13.612": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Agrigento, Sicily, 92100, Italy",
+    "place": "Agrigento",
+    "source": "nominatim",
+    "state": "Sicily"
+  },
+  "37.246,13.613": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Agrigento, Sicily, 92100, Italy",
+    "place": "Agrigento",
+    "source": "nominatim",
+    "state": "Sicily"
+  },
+  "37.246,13.614": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Agrigento, Sicily, 92100, Italy",
+    "place": "Agrigento",
+    "source": "nominatim",
+    "state": "Sicily"
+  },
+  "37.260,13.585": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Agrigento, Sicily, 92100, Italy",
+    "place": "Agrigento",
+    "source": "nominatim",
+    "state": "Sicily"
+  },
+  "37.261,13.588": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Agrigento, Sicily, 92100, Italy",
+    "place": "Agrigento",
+    "source": "nominatim",
+    "state": "Sicily"
+  },
+  "37.261,13.589": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Agrigento, Sicily, 92100, Italy",
+    "place": "Agrigento",
+    "source": "nominatim",
+    "state": "Sicily"
+  },
+  "37.262,13.580": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Agrigento, Sicily, 92100, Italy",
+    "place": "Agrigento",
+    "source": "nominatim",
+    "state": "Sicily"
+  },
+  "37.267,13.608": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Agrigento, Sicily, 92100, Italy",
+    "place": "Agrigento",
+    "source": "nominatim",
+    "state": "Sicily"
+  },
+  "37.291,13.500": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Porto Empedocle, Agrigento, Sicily, 92014, Italy",
+    "place": "Porto Empedocle",
+    "source": "nominatim",
+    "state": "Sicily"
+  },
+  "37.292,13.500": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Porto Empedocle, Agrigento, Sicily, 92014, Italy",
+    "place": "Porto Empedocle",
+    "source": "nominatim",
+    "state": "Sicily"
+  },
+  "37.292,13.501": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Porto Empedocle, Agrigento, Sicily, 92014, Italy",
+    "place": "Porto Empedocle",
+    "source": "nominatim",
+    "state": "Sicily"
+  },
+  "37.308,13.592": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Agrigento, Sicily, 92100, Italy",
+    "place": "Agrigento",
+    "source": "nominatim",
+    "state": "Sicily"
+  },
+  "37.318,13.416": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Italy",
+    "place": null,
+    "source": "nominatim",
+    "state": null
+  },
+  "37.521,15.112": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Catania, Sicily, Italy",
+    "place": "Catania",
+    "source": "nominatim",
+    "state": "Sicily"
+  },
+  "37.968,23.732": {
+    "country": "Greece",
+    "country_code": "gr",
+    "display_name": "Athens, Municipality of Athens, Regional Unit of Central Athens, Attica, 105 57, Greece",
+    "place": "Athens",
+    "source": "nominatim",
+    "state": "Attica"
+  },
+  "38.022,13.951": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Cefalù, Palermo, Sicily, 90015, Italy",
+    "place": "Cefalù",
+    "source": "nominatim",
+    "state": "Sicily"
+  },
+  "38.023,13.936": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Cefalù, Palermo, Sicily, 90015, Italy",
+    "place": "Cefalù",
+    "source": "nominatim",
+    "state": "Sicily"
+  },
+  "38.119,13.357": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Palermo, Sicily, Italy",
+    "place": "Palermo",
+    "source": "nominatim",
+    "state": "Sicily"
+  },
+  "39.217,9.113": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Cagliari, Sardinia, Italy",
+    "place": "Cagliari",
+    "source": "nominatim",
+    "state": "Sardinia"
+  },
+  "40.355,18.173": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Lecce, Apulia, 73100, Italy",
+    "place": "Lecce",
+    "source": "nominatim",
+    "state": "Apulia"
+  },
+  "40.430,-3.708": {
+    "country": "Spain",
+    "country_code": "es",
+    "display_name": "Madrid, Community of Madrid, Spain",
+    "place": "Madrid",
+    "source": "nominatim",
+    "state": "Community of Madrid"
+  },
+  "40.719,-73.994": {
+    "country": "United States",
+    "country_code": "us",
+    "display_name": "Manhattan, New York County, New York, United States",
+    "place": "New York",
+    "source": "nominatim",
+    "state": "New York"
+  },
+  "40.722,-73.987": {
+    "country": "United States",
+    "country_code": "us",
+    "display_name": "Manhattan, New York County, New York, United States",
+    "place": "New York",
+    "source": "nominatim",
+    "state": "New York"
+  },
+  "40.724,-74.008": {
+    "country": "United States",
+    "country_code": "us",
+    "display_name": "Manhattan, New York County, New York, United States",
+    "place": "New York",
+    "source": "nominatim",
+    "state": "New York"
+  },
+  "40.798,-73.953": {
+    "country": "United States",
+    "country_code": "us",
+    "display_name": "Manhattan, New York County, New York, United States",
+    "place": "New York",
+    "source": "nominatim",
+    "state": "New York"
+  },
+  "40.830,14.246": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Naples, Campania, Italy",
+    "place": "Naples",
+    "source": "nominatim",
+    "state": "Campania"
+  },
+  "40.830,14.247": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Naples, Campania, Italy",
+    "place": "Naples",
+    "source": "nominatim",
+    "state": "Campania"
+  },
+  "40.831,14.251": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Naples, Campania, Italy",
+    "place": "Naples",
+    "source": "nominatim",
+    "state": "Campania"
+  },
+  "40.834,14.242": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Naples, Campania, Italy",
+    "place": "Naples",
+    "source": "nominatim",
+    "state": "Campania"
+  },
+  "40.842,14.252": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Naples, Campania, Italy",
+    "place": "Naples",
+    "source": "nominatim",
+    "state": "Campania"
+  },
+  "41.123,16.876": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bari, Apulia, Italy",
+    "place": "Bari",
+    "source": "nominatim",
+    "state": "Apulia"
+  },
+  "41.416,2.139": {
+    "country": "Spain",
+    "country_code": "es",
+    "display_name": "Barcelona, Barcelonès, Barcelona, Catalonia, Spain",
+    "place": "Barcelona",
+    "source": "nominatim",
+    "state": "Catalonia"
+  },
+  "41.419,2.128": {
+    "country": "Spain",
+    "country_code": "es",
+    "display_name": "Barcelona, Barcelonès, Barcelona, Catalonia, Spain",
+    "place": "Barcelona",
+    "source": "nominatim",
+    "state": "Catalonia"
+  },
+  "41.892,12.438": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Rome, Roma, Lazio, Italy",
+    "place": "Rome",
+    "source": "nominatim",
+    "state": "Lazio"
+  },
+  "41.911,12.454": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Rome, Roma, Lazio, Italy",
+    "place": "Rome",
+    "source": "nominatim",
+    "state": "Lazio"
+  },
+  "42.358,-71.095": {
+    "country": "United States",
+    "country_code": "us",
+    "display_name": "Cambridge, Middlesex County, Massachusetts, United States",
+    "place": "Cambridge",
+    "source": "nominatim",
+    "state": "Massachusetts"
+  },
+  "42.359,-71.106": {
+    "country": "United States",
+    "country_code": "us",
+    "display_name": "Cambridge, Middlesex County, Massachusetts, United States",
+    "place": "Cambridge",
+    "source": "nominatim",
+    "state": "Massachusetts"
+  },
+  "42.360,-71.105": {
+    "country": "United States",
+    "country_code": "us",
+    "display_name": "Cambridge, Middlesex County, Massachusetts, United States",
+    "place": "Cambridge",
+    "source": "nominatim",
+    "state": "Massachusetts"
+  },
+  "42.360,-71.106": {
+    "country": "United States",
+    "country_code": "us",
+    "display_name": "Cambridge, Middlesex County, Massachusetts, United States",
+    "place": "Cambridge",
+    "source": "nominatim",
+    "state": "Massachusetts"
+  },
+  "42.361,-71.105": {
+    "country": "United States",
+    "country_code": "us",
+    "display_name": "Cambridge, Middlesex County, Massachusetts, United States",
+    "place": "Cambridge",
+    "source": "nominatim",
+    "state": "Massachusetts"
+  },
+  "42.797,10.973": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Castiglione della Pescaia, Grosseto, Tuscany, 58043, Italy",
+    "place": "Castiglione della Pescaia",
+    "source": "nominatim",
+    "state": "Tuscany"
+  },
+  "42.836,12.362": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Monte Castello di Vibio, Perugia, Umbria, 06057, Italy",
+    "place": "Monte Castello di Vibio",
+    "source": "nominatim",
+    "state": "Umbria"
+  },
+  "43.180,16.674": {
+    "country": "Croatia",
+    "country_code": "hr",
+    "display_name": "Vrboska, Jelsa, Split-Dalmatia County, 21464, Croatia",
+    "place": "Jelsa",
+    "source": "nominatim",
+    "state": null
+  },
+  "43.327,16.448": {
+    "country": "Croatia",
+    "country_code": "hr",
+    "display_name": "Split-Dalmatia County, Croatia",
+    "place": "Split-Dalmatia County",
+    "source": "nominatim",
+    "state": null
+  },
+  "43.341,16.434": {
+    "country": "Croatia",
+    "country_code": "hr",
+    "display_name": "Milna, Općina Milna, Split-Dalmatia County, 21405, Croatia",
+    "place": "Općina Milna",
+    "source": "nominatim",
+    "state": null
+  },
+  "43.452,16.144": {
+    "country": "Croatia",
+    "country_code": "hr",
+    "display_name": "Zirona Grande, Città di Traù, Split-Dalmatia County, 21225, Croatia",
+    "place": "Città di Traù",
+    "source": "nominatim",
+    "state": null
+  },
+  "43.509,5.793": {
+    "country": "France",
+    "country_code": "fr",
+    "display_name": "Ollières, Brignoles, Var, Provence-Alpes-Côte d'Azur, Metropolitan France, 83470, France",
+    "place": "Ollières",
+    "source": "nominatim",
+    "state": "Provence-Alpes-Côte d'Azur"
+  },
+  "43.515,16.216": {
+    "country": "Croatia",
+    "country_code": "hr",
+    "display_name": "Seghetto, Comune di Seghetto, Split-Dalmatia County, Croatia",
+    "place": "Seghetto",
+    "source": "nominatim",
+    "state": null
+  },
+  "43.523,13.619": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Sirolo, Ancona, Marche, Italy",
+    "place": "Sirolo",
+    "source": "nominatim",
+    "state": "Marche"
+  },
+  "43.524,13.615": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Sirolo, Ancona, Marche, Italy",
+    "place": "Sirolo",
+    "source": "nominatim",
+    "state": "Marche"
+  },
+  "43.616,7.068": {
+    "country": "France",
+    "country_code": "fr",
+    "display_name": "Biot, Grasse, Maritime Alps, Provence-Alpes-Côte d'Azur, Metropolitan France, 06410, France",
+    "place": "Biot",
+    "source": "nominatim",
+    "state": "Provence-Alpes-Côte d'Azur"
+  },
+  "43.693,7.255": {
+    "country": "France",
+    "country_code": "fr",
+    "display_name": "Nice, Nizza, Maritime Alps, Provence-Alpes-Côte d'Azur, Metropolitan France, France",
+    "place": "Nice",
+    "source": "nominatim",
+    "state": "Provence-Alpes-Côte d'Azur"
+  },
+  "43.716,10.399": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Pisa, Tuscany, Italy",
+    "place": "Pisa",
+    "source": "nominatim",
+    "state": "Tuscany"
+  },
+  "43.772,11.255": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Florence, Tuscany, Italy",
+    "place": "Florence",
+    "source": "nominatim",
+    "state": "Tuscany"
+  },
+  "43.794,11.283": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Florence, Tuscany, Italy",
+    "place": "Florence",
+    "source": "nominatim",
+    "state": "Tuscany"
+  },
+  "44.058,12.593": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Rimini, Emilia-Romagna, 47921-47924, Italy",
+    "place": "Rimini",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.070,12.579": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Rimini, Emilia-Romagna, 47921-47924, Italy",
+    "place": "Rimini",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.074,12.577": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Rimini, Emilia-Romagna, 47921-47924, Italy",
+    "place": "Rimini",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.249,12.366": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Cervia, Ravenna, Emilia-Romagna, 48015, Italy",
+    "place": "Cervia",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.253,12.364": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Cervia, Ravenna, Emilia-Romagna, 48015, Italy",
+    "place": "Cervia",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.255,12.360": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Cervia, Ravenna, Emilia-Romagna, 48015, Italy",
+    "place": "Cervia",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.256,12.362": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Cervia, Ravenna, Emilia-Romagna, 48015, Italy",
+    "place": "Cervia",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.257,12.361": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Cervia, Ravenna, Emilia-Romagna, 48015, Italy",
+    "place": "Cervia",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.257,12.362": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Cervia, Ravenna, Emilia-Romagna, 48015, Italy",
+    "place": "Cervia",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.258,12.362": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Cervia, Ravenna, Emilia-Romagna, 48015, Italy",
+    "place": "Cervia",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.263,12.355": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Cervia, Ravenna, Emilia-Romagna, 48015, Italy",
+    "place": "Cervia",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.410,8.929": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Genoa, Liguria, Italy",
+    "place": "Genoa",
+    "source": "nominatim",
+    "state": "Liguria"
+  },
+  "44.414,12.181": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Ravenna, Emilia-Romagna, 48121-48125, Italy",
+    "place": "Ravenna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.417,8.923": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Genoa, Liguria, Italy",
+    "place": "Genoa",
+    "source": "nominatim",
+    "state": "Liguria"
+  },
+  "44.479,11.354": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.480,11.350": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.480,11.352": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.480,11.353": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.480,11.354": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.481,11.330": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.481,11.338": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.481,11.346": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.481,11.349": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.481,11.351": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.481,11.352": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.481,11.353": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.482,11.350": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.482,11.351": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.482,11.355": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.483,11.339": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.483,11.343": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.483,11.350": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.483,11.355": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.484,11.335": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.484,11.336": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.484,11.337": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.484,11.339": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.484,11.340": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.484,11.350": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.484,11.351": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.484,11.355": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.484,11.356": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.485,11.335": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.485,11.336": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.485,11.337": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.485,11.338": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.485,11.339": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.485,11.340": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.485,11.349": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.485,11.350": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.485,11.357": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.486,11.332": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.486,11.335": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.486,11.336": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.486,11.339": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.486,11.340": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.486,11.343": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.486,11.344": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.487,11.331": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.487,11.339": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.487,11.340": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.487,11.344": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.488,11.333": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.488,11.340": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.488,11.344": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.488,11.345": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.489,11.341": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.489,11.342": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.490,11.341": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.491,11.312": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.491,11.329": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.492,11.343": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.492,11.351": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.494,11.311": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.494,11.343": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.495,11.342": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.495,11.343": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.496,11.311": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.496,11.333": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.501,11.346": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "44.511,11.333": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
+  "45.065,7.685": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Turin, Piedmont, Italy",
+    "place": "Turin",
+    "source": "nominatim",
+    "state": "Piedmont"
+  },
+  "45.694,9.669": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bergamo, Lombardy, 24121-24129, Italy",
+    "place": "Bergamo",
+    "source": "nominatim",
+    "state": "Lombardy"
+  },
+  "45.892,11.553": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Gallio, Vicenza, Veneto, 36032, Italy",
+    "place": "Gallio",
+    "source": "nominatim",
+    "state": "Veneto"
+  },
+  "45.904,10.027": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Castione della Presolana, Bergamo, Lombardy, 24020, Italy",
+    "place": "Castione della Presolana",
+    "source": "nominatim",
+    "state": "Lombardy"
+  },
+  "46.000,8.967": {
+    "country": "Switzerland",
+    "country_code": "ch",
+    "display_name": "Lugano, Circolo di Lugano ovest, Distretto di Lugano, Ticino, Switzerland",
+    "place": "Lugano",
+    "source": "nominatim",
+    "state": "Ticino"
+  },
+  "46.002,8.969": {
+    "country": "Switzerland",
+    "country_code": "ch",
+    "display_name": "Lugano, Circolo di Lugano ovest, Distretto di Lugano, Ticino, Switzerland",
+    "place": "Lugano",
+    "source": "nominatim",
+    "state": "Ticino"
+  },
+  "46.612,11.191": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Postal, Burgraviato, South Tyrol, Trentino – Alto Adige/Südtirol, 39014, Italy",
+    "place": "Postal",
+    "source": "nominatim",
+    "state": "Trentino – Alto Adige/Südtirol"
+  },
+  "46.637,11.175": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Merano, Burgraviato, South Tyrol, Trentino – Alto Adige/Südtirol, 39012, Italy",
+    "place": "Merano",
+    "source": "nominatim",
+    "state": "Trentino – Alto Adige/Südtirol"
+  },
+  "48.204,16.373": {
+    "country": "Austria",
+    "country_code": "at",
+    "display_name": "Vienna, Austria",
+    "place": "Vienna",
+    "source": "nominatim",
+    "state": null
+  },
+  "48.846,2.373": {
+    "country": "France",
+    "country_code": "fr",
+    "display_name": "Parigi, Paris, Ile-de-France, Metropolitan France, France",
+    "place": "Paris",
+    "source": "nominatim",
+    "state": "Ile-de-France"
+  },
+  "48.880,2.242": {
+    "country": "France",
+    "country_code": "fr",
+    "display_name": "Puteaux, Arrondissement of Nanterre, Hauts-de-Seine, Ile-de-France, Metropolitan France, 92800, France",
+    "place": "Puteaux",
+    "source": "nominatim",
+    "state": "Ile-de-France"
+  },
+  "50.632,3.067": {
+    "country": "France",
+    "country_code": "fr",
+    "display_name": "Lilla, Nord, Hauts-de-France, Metropolitan France, France",
+    "place": "Lilla",
+    "source": "nominatim",
+    "state": "Hauts-de-France"
+  },
+  "50.851,4.353": {
+    "country": "Belgium",
+    "country_code": "be",
+    "display_name": "Brussels, Brussels-Capital, Belgium",
+    "place": "Brussels",
+    "source": "nominatim",
+    "state": null
+  },
+  "51.452,-0.071": {
+    "country": "United Kingdom",
+    "country_code": "gb",
+    "display_name": "London Borough of Southwark, Greater London, England, United Kingdom",
+    "place": "Greater London",
+    "source": "nominatim",
+    "state": "England"
+  },
+  "51.453,-0.071": {
+    "country": "United Kingdom",
+    "country_code": "gb",
+    "display_name": "London Borough of Southwark, Greater London, England, United Kingdom",
+    "place": "Greater London",
+    "source": "nominatim",
+    "state": "England"
+  },
+  "51.509,-0.122": {
+    "country": "United Kingdom",
+    "country_code": "gb",
+    "display_name": "City of Westminster, Greater London, England, United Kingdom",
+    "place": "City of Westminster",
+    "source": "nominatim",
+    "state": "England"
+  },
+  "51.510,-0.121": {
+    "country": "United Kingdom",
+    "country_code": "gb",
+    "display_name": "City of Westminster, Greater London, England, United Kingdom",
+    "place": "City of Westminster",
+    "source": "nominatim",
+    "state": "England"
+  },
+  "52.507,13.346": {
+    "country": "Germany",
+    "country_code": "de",
+    "display_name": "Berlin, Germany",
+    "place": "Berlin",
+    "source": "nominatim",
+    "state": null
+  },
+  "55.703,13.186": {
+    "country": "Sweden",
+    "country_code": "se",
+    "display_name": "Lund, Lund Municipality, Skåne County, Sweden",
+    "place": "Lund",
+    "source": "nominatim",
+    "state": null
+  },
+  "63.434,10.403": {
+    "country": "Norway",
+    "country_code": "no",
+    "display_name": "Trondheim, Trøndelag, Norway",
+    "place": "Trondheim",
+    "source": "nominatim",
+    "state": null
+  },
+  "63.434,10.405": {
+    "country": "Norway",
+    "country_code": "no",
+    "display_name": "Trondheim, Trøndelag, Norway",
+    "place": "Trondheim",
+    "source": "nominatim",
+    "state": null
+  }
+}

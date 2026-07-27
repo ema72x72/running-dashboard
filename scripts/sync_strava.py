@@ -148,7 +148,6 @@ def convert_activity(activity: dict[str, Any], access_token: str) -> dict[str, A
     year, day_of_year, weekday = date_fields(date_string)
 
     start_latlng = activity.get("start_latlng") or [None, None]
-
     activity_id = int(activity["id"])
 
     average_cadence = activity.get("average_cadence")
@@ -160,59 +159,36 @@ def convert_activity(activity: dict[str, Any], access_token: str) -> dict[str, A
 
     run = {
         "id": str(activity_id),
-
         "d": date_string,
         "y": year,
         "doy": day_of_year,
         "wd": weekday,
-
         "km": round(float(activity.get("distance", 0)) / 1000, 3),
-
         "min": round(float(activity.get("moving_time", 0)) / 60, 2),
-
         "elapsed_min": round(
-            float(activity.get("elapsed_time", 0)) / 60, 2
+            float(activity.get("elapsed_time", 0)) / 60,
+            2,
         ),
-
         "hr": activity.get("average_heartrate"),
         "mhr": activity.get("max_heartrate"),
         "cad": cadence_spm,
-
         "lat": start_latlng[0],
         "lon": start_latlng[1],
-
         "start_local": activity.get("start_date_local"),
         "name": activity.get("name"),
-
         "elev": round(
             float(activity.get("total_elevation_gain", 0)),
             1,
         ),
-
-        # saranno valorizzati nello Step 2
         "calories": None,
         "description": None,
         "gear_name": None,
-
         "hrz": get_hr_zones(activity_id, access_token),
     }
 
-    
-    return {
-        "id": str(activity_id),
-        "d": date_string,
-        "y": year,
-        "doy": day_of_year,
-        "wd": weekday,
-        "km": round(float(activity.get("distance", 0)) / 1000, 3),
-        "min": round(float(activity.get("moving_time", 0)) / 60, 2),
-        "hr": activity.get("average_heartrate"),
-        "mhr": activity.get("max_heartrate"),
-        "cad": cadence_spm,
-        "lat": start_latlng[0],
-        "lon": start_latlng[1],
-        "hrz": get_hr_zones(activity_id, access_token),
-    }
+    return run
+
+
 
 
 def main() -> None:

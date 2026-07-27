@@ -32,8 +32,17 @@
     for (const k in dirty) dirty[k] = true;
   }
 
+  // Activities under 300m are treated as accidental watch starts/stops,
+  // not real runs: their pace is meaningless and, landing in otherwise
+  // quiet stretches, they can swing the Trend tab's 30-day averages
+  // wildly (e.g. a 166m/3.4min entry once made the pace chart spike to
+  // 20:00/km). sync_strava.py already skips these for future syncs; this
+  // is a defense-in-depth filter in case any such entry ever ends up in
+  // data/runs.json regardless of source (manual edit, other import, etc).
+  const MIN_RUN_KM = 0.3;
+
   function filteredRuns() {
-    return RUNS.filter(r => selectedYears.has(r.y));
+    return RUNS.filter(r => selectedYears.has(r.y) && r.km >= MIN_RUN_KM);
   }
 
   function fmtPace(s) {

@@ -26,6 +26,14 @@ DATA_FILE = Path("data/runs.json")
 METADATA_FILE = Path("data/metadata.json")
 TRACKS_DIR = Path("data/tracks")
 
+# Activities shorter than this are almost always accidental watch
+# starts/stops (e.g. a 3-minute, 166m "run" that was really a fumbled
+# button press), not real runs. Their pace is meaningless and, since they
+# tend to fall in otherwise-quiet periods, they can dominate the 30-day
+# moving averages on the Trend tab. Skip them before they ever reach
+# data/runs.json.
+MIN_DISTANCE_M = 300
+
 
 def refresh_access_token() -> dict[str, Any]:
     response = requests.post(
@@ -474,6 +482,8 @@ def main() -> None:
         if "Run" not in sport_type:
             continue
         if activity_id in existing_ids:
+            continue
+        if float(activity.get("distance", 0) or 0) < MIN_DISTANCE_M:
             continue
 
         runs.append(

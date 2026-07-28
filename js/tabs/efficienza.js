@@ -6,7 +6,7 @@
 // evaluation year, every other selected year is the historical benchmark —
 // so there is no duplicate "reference year" selector inside the page.
 (function () {
-  const { filteredRuns, getSelectedYears, upsertChart, fmtPace, fmtDate, runDateToLocalTime, getGridColor } = window.RD.state;
+  const { filteredRuns, getSelectedYears, getAllYears, upsertChart, fmtPace, fmtDate, runDateToLocalTime, getGridColor } = window.RD.state;
 
   function validEfficiencyRun(r) {
     if (!Number.isFinite(r.hr) || r.hr <= 0 || !Number.isFinite(r.km) || r.km <= 0 || !Number.isFinite(r.min) || r.min <= 0) return false;
@@ -23,11 +23,24 @@
     const pos = (sorted.length-1)*p, lo = Math.floor(pos), hi = Math.ceil(pos), w = pos-lo;
     return sorted[lo] + (sorted[hi]-sorted[lo])*w;
   }
-  function formatYearList(years) {
+  // "Contiguous" is judged against the years that actually exist in the
+  // dataset, not against raw consecutive integers: this dataset has no
+  // 2019 runs at all, so a plain integer-gap check would wrongly treat
+  // "all years" as a sparse selection and print every single year out
+  // (e.g. "2014/2015/.../2025") instead of a clean "2014–2025" range.
+  // A real gap the user deliberately introduced (e.g. picking
+  // 2020 and 2024 while skipping 2021-2023, which DO have data) still
+  // falls back to the explicit list, since a range there would imply
+  // data that isn't actually included.
+  function formatYearList(years, allYears) {
     if (!years.length) return "";
     if (years.length === 1) return String(years[0]);
-    const isContiguous = years.every((y,i)=> i===0 || y===years[i-1]+1);
-    return isContiguous ? `${years[0]}–${years[years.length-1]}` : years.join("/");
+    const min = years[0], max = years[years.length-1];
+    const available = (allYears && allYears.length)
+      ? allYears.filter(y => y >= min && y <= max).slice().sort((a,b)=>a-b)
+      : years;
+    const isContiguous = available.length === years.length && available.every((y,i)=>y===years[i]);
+    return isContiguous ? `${min}–${max}` : years.join("/");
   }
 
   // ---- Automatic benchmark logic (memo section 6): the most recent
@@ -202,7 +215,7 @@
 
     let effCompare = "", paceCompare = "", hrCompare = "";
     if (evalStats && benchStats) {
-      const benchLabel = formatYearList(benchmarkYears);
+      const benchLabel = formatYearList(benchmarkYears, getAllYears());
       const effPct = ((evalStats.efficiency - benchStats.efficiency) / benchStats.efficiency) * 100;
       const paceDiff = Math.round(evalStats.pace - benchStats.pace);
       const hrDiff = Math.round(evalStats.hr - benchStats.hr);
@@ -314,7 +327,7 @@
       }
     }
     if (hasBenchmark) {
-      scatterDatasets.push({ label:`Other years (${formatYearList(benchmarkYears)})`, data: benchmarkRuns.map(toPoint), backgroundColor:"rgba(137,135,129,.55)", borderColor:"rgba(137,135,129,.55)", pointRadius:4, pointHoverRadius:7, order:10 });
+      scatterDatasets.push({ label:`Other years (${formatYearList(benchmarkYears, getAllYears())})`, data: benchmarkRuns.map(toPoint), backgroundColor:"rgba(137,135,129,.55)", borderColor:"rgba(137,135,129,.55)", pointRadius:4, pointHoverRadius:7, order:10 });
     }
     if (evaluationRuns.length) {
       scatterDatasets.push({ label:`${evaluationYear} (selected year)`, data: evaluationRuns.map(toPoint), backgroundColor:"#2a78d6", borderColor:"#2a78d6", pointRadius:4, pointHoverRadius:7, order:5 });
@@ -353,7 +366,7 @@
 
     if (legendEl) {
       const items = [];
-      if (hasBenchmark) items.push({ color:"rgba(137,135,129,.7)", label:`Other years (${formatYearList(benchmarkYears)})` });
+      if (hasBenchmark) items.push({ color:"rgba(137,135,129,.7)", label:`Other years (${formatYearList(benchmarkYears, getAllYears())})` });
       if (evaluationRuns.length) items.push({ color:"#2a78d6", label:`${evaluationYear} (selected year)` });
       if (hasBenchmark) {
         items.push({ color:"#22c55e", label:"Trend (LOESS)" });

@@ -76,7 +76,7 @@ main { padding: 1rem; max-width: 720px; margin: 0 auto; }
 .kpicard .value.kpi-value-green { color:#22c55e; }
 .kpicard .value.kpi-value-blue { color:#2a78d6; }
 .kpicard .value.kpi-value-red { color:#ef4444; }
-.kpicard .kpi-compare { margin:6px 0 0; font-size:11px; color:var(--text-muted); }
+.kpicard .kpi-compare { margin:6px 0 0; font-size:11px; color:var(--text-muted); overflow-wrap:anywhere; }
 .kpicard .kpi-compare.kpi-value-green { color:#22c55e; }
 .kpicard .kpi-compare.kpi-value-blue { color:#2a78d6; }
 .kpicard .kpi-compare.kpi-value-red { color:#ef4444; }

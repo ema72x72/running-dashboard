@@ -143,17 +143,26 @@
   }
 
   // ---------- Tabs ----------
+  // Factored out of the click handler so other tabs can switch the
+  // active tab programmatically (e.g. the Map tab's "Open run details"
+  // action jumping into the Runs tab with a specific run selected).
+  function activateTab(tabKey) {
+    const targetTabEl = document.querySelector(`.tab[data-tab="${tabKey}"]`);
+    const targetPanelEl = document.getElementById("tab-" + tabKey);
+    if (!targetTabEl || !targetPanelEl) return;
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".tabpanel").forEach(p => p.classList.remove("active"));
+    targetTabEl.classList.add("active");
+    targetPanelEl.classList.add("active");
+    activeTab = tabKey;
+    renderActiveTab();
+    if (activeTab === "mappa" && tabs.mappa.getLeafletMap()) setTimeout(() => tabs.mappa.getLeafletMap().invalidateSize(), 50);
+    if (activeTab === "runs" && tabs.runs.getRunDetailMap()) setTimeout(() => tabs.runs.getRunDetailMap().invalidateSize(), 50);
+  }
+  window.RD.activateTab = activateTab;
+
   document.querySelectorAll(".tab").forEach(el => {
-    el.addEventListener("click", () => {
-      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-      document.querySelectorAll(".tabpanel").forEach(p => p.classList.remove("active"));
-      el.classList.add("active");
-      document.getElementById("tab-" + el.dataset.tab).classList.add("active");
-      activeTab = el.dataset.tab;
-      renderActiveTab();
-      if (activeTab === "mappa" && tabs.mappa.getLeafletMap()) setTimeout(() => tabs.mappa.getLeafletMap().invalidateSize(), 50);
-      if (activeTab === "runs" && tabs.runs.getRunDetailMap()) setTimeout(() => tabs.runs.getRunDetailMap().invalidateSize(), 50);
-    });
+    el.addEventListener("click", () => activateTab(el.dataset.tab));
   });
 
   // ---------- Data loading, metadata and GitHub sync ----------

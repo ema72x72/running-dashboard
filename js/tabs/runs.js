@@ -239,6 +239,15 @@
   }
   function runKey(run) { return run?.id || `${run?.d}-${run?.km}-${run?.min}`; }
   function selectRun(key) { selectedRunId=String(key); dirty.runs=true; renderRuns(); }
+  // Cross-tab entry point (used by the Map tab's "Open run details"
+  // action): looks the run up by its Strava activity id among the runs
+  // currently visible under the shared year filter, so it stays
+  // consistent with whatever the Map tab was showing when clicked.
+  function selectRunById(id) {
+    const runs = sortedSelectableRuns();
+    const match = runs.find(r => String(r.id) === String(id)) || runs.find(r => String(runKey(r)) === String(id));
+    if (match) selectRun(runKey(match));
+  }
   function compareSimilarRun(run,runs) {
     const candidates=runs.filter(r=>runKey(r)!==runKey(run)); const target=document.getElementById("compareResult"); if(!target||!candidates.length)return;
     const similar=candidates.slice().sort((a,b)=>Math.abs(a.km-run.km)-Math.abs(b.km-run.km))[0]; const paceA=paceSecondsFromRun(run), paceB=paceSecondsFromRun(similar);
@@ -286,5 +295,5 @@
   }
 
   window.RD.tabs = window.RD.tabs || {};
-  window.RD.tabs.runs = { render: renderRuns, getRunDetailMap: () => runDetailMap };
+  window.RD.tabs.runs = { render: renderRuns, getRunDetailMap: () => runDetailMap, selectRunById };
 })();

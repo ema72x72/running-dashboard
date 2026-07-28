@@ -13,9 +13,36 @@
   let markerLayer = null;
   let heatLayer = null;
   let routeLayer = null;
+  let tileLayer = null;
+  let tileLayerIsDark = null;
   let mapMode = "heat";
   let currentGroups = [];
   let currentRuns = [];
+
+  /* ---------- Theme-aware base map (matches the app's light/dark toggle) ---------- */
+  // The rest of the app (including the Run Details map in js/tabs/runs.js)
+  // already uses CartoDB's dark basemap; this tab previously always used
+  // plain OpenStreetMap tiles regardless of theme, which is why it looked
+  // washed-out/light next to the mockup and the rest of a dark-mode UI.
+  // Re-checked on every render (not just once at map creation) so a
+  // theme toggle - which redraws charts via markAllDirty(), not the
+  // Leaflet map - still picks up the right tiles next time this tab
+  // renders, the same way getGridColor() is re-read on every chart draw.
+  function isDarkTheme() {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    return explicit ? explicit === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  function ensureTileLayer() {
+    const dark = isDarkTheme();
+    if (tileLayer && tileLayerIsDark === dark) return;
+    if (tileLayer) leafletMap.removeLayer(tileLayer);
+    const style = dark ? "dark_all" : "light_all";
+    tileLayer = L.tileLayer(`https://{s}.basemaps.cartocdn.com/${style}/{z}/{x}/{y}{r}.png`, {
+      maxZoom: 20,
+      attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
+    }).addTo(leafletMap);
+    tileLayerIsDark = dark;
+  }
 
   /* ---------- Routes mode state (memo sections 3.3, 4, 10) ---------- */
   // Recommended zoom threshold from the memo (11-12); picked 12 as the
@@ -137,22 +164,36 @@
     // "First visit" is computed from the runner's ENTIRE history (not
     // just the currently filtered years): otherwise narrowing the year
     // filter could make a long-known city look "new" just because its
-    // earlier visits fall outside the current selection.
-    const globalFirstYear = new Map();
+    // earlier visits fall outside the current selection. Tracked at both
+    // city and country level: a country only counts as "new this year"
+    // if the very first run recorded in ANY of its cities happened this
+    // year - visiting a second city of an already-known country doesn't
+    // make the country new again.
+    const globalFirstYearByCity = new Map();
+    const globalFirstYearByCountry = new Map();
     getRuns().forEach(r => {
       if (!Number.isFinite(r.lat) || !Number.isFinite(r.lon) || !r.location_city) return;
       const key = locationKey(r);
-      const existing = globalFirstYear.get(key);
-      if (existing === undefined || r.y < existing) globalFirstYear.set(key, r.y);
+      const existingCity = globalFirstYearByCity.get(key);
+      if (existingCity === undefined || r.y < existingCity) globalFirstYearByCity.set(key, r.y);
+      if (r.location_country) {
+        const existingCountry = globalFirstYearByCountry.get(r.location_country);
+        if (existingCountry === undefined || r.y < existingCountry) globalFirstYearByCountry.set(r.location_country, r.y);
+      }
     });
     const newPlaces = referenceYear !== null
-      ? known.filter(g => globalFirstYear.get(g.key) === referenceYear)
+      ? known.filter(g => globalFirstYearByCity.get(g.key) === referenceYear)
       : [];
+    const newCountriesCount = referenceYear !== null
+      ? new Set(known.map(g => g.country).filter(country => country && globalFirstYearByCountry.get(country) === referenceYear)).size
+      : 0;
 
     let favouriteCity = null;
     known.forEach(g => {
       if (!favouriteCity || g.km > favouriteCity.km || (g.km === favouriteCity.km && g.n > favouriteCity.n)) favouriteCity = g;
     });
+    const totalKnownKm = known.reduce((sum, g) => sum + g.km, 0);
+    const favouriteSharePct = favouriteCity && totalKnownKm > 0 ? (favouriteCity.km / totalKnownKm) * 100 : null;
 
     // Most travelled year needs per-calendar-year distinct country/city
     // counts, which the location groups (already merged across years)
@@ -177,36 +218,47 @@
       }
     });
 
-    return { countries, cities, newPlaces, favouriteCity, mostTravelledYear, referenceYear };
+    return { countries, cities, newPlaces, newCountriesCount, favouriteCity, favouriteSharePct, mostTravelledYear, referenceYear };
   }
 
   function renderSummaryCards(stats) {
     const el = document.getElementById("mapStats");
     if (!el) return;
     const cards = [
-      { icon: "🌐", label: "Countries", value: stats.countries, sub: "" },
-      { icon: "🏙", label: "Cities", value: stats.cities, sub: "" },
       {
-        icon: "📍", label: "New places", value: stats.newPlaces.length,
+        icon: "🌐", color: "purple", label: "Countries", value: stats.countries,
+        sub: stats.newCountriesCount > 0 ? `+${stats.newCountriesCount} this year` : "",
+        subAccent: "green",
+      },
+      {
+        icon: "🏙", color: "blue", label: "Cities", value: stats.cities,
+        sub: stats.newPlaces.length > 0 ? `+${stats.newPlaces.length} this year` : "",
+        subAccent: "green",
+      },
+      {
+        icon: "📍", color: "green", label: "New places", value: stats.newPlaces.length,
         sub: stats.referenceYear
           ? (stats.newPlaces.length ? `${stats.referenceYear} · ${stats.newPlaces.slice(0, 3).map(g => g.city).join(", ")}` : String(stats.referenceYear))
           : "",
       },
       {
-        icon: "⭐", label: "Favourite city", value: stats.favouriteCity ? stats.favouriteCity.city : "—",
-        sub: stats.favouriteCity ? `${fmtKm(stats.favouriteCity.km)} km · ${stats.favouriteCity.n} runs` : "",
+        icon: "⭐", color: "orange", label: "Favourite city", labelAccent: "orange", value: stats.favouriteCity ? stats.favouriteCity.city : "—",
+        sub: stats.favouriteCity
+          ? `${stats.favouriteCity.n} runs · ${fmtKm(stats.favouriteCity.km)} km`
+            + (Number.isFinite(stats.favouriteSharePct) ? ` · ${Math.round(stats.favouriteSharePct)}% of total distance` : "")
+          : "",
       },
       {
-        icon: "✈", label: "Most travelled year", value: stats.mostTravelledYear ? stats.mostTravelledYear.year : "—",
+        icon: "✈", color: "purple", label: "Most travelled year", value: stats.mostTravelledYear ? stats.mostTravelledYear.year : "—",
         sub: stats.mostTravelledYear ? `${stats.mostTravelledYear.countries.size} countries · ${stats.mostTravelledYear.cities.size} cities` : "",
       },
     ];
     el.innerHTML = cards.map(c => `
       <div class="map-stat-card">
-        <div class="map-stat-icon">${c.icon}</div>
+        <div class="map-stat-icon map-stat-icon-${c.color}">${c.icon}</div>
         <p class="map-stat-value">${escapeHtml(c.value)}</p>
-        <p class="map-stat-label">${c.label}</p>
-        <p class="map-stat-sub">${escapeHtml(c.sub || "")}</p>
+        <p class="map-stat-label${c.labelAccent ? ` map-stat-accent-${c.labelAccent}` : ""}">${c.label}</p>
+        <p class="map-stat-sub${c.subAccent ? ` map-stat-accent-${c.subAccent}` : ""}">${escapeHtml(c.sub || "")}</p>
       </div>
     `).join("");
   }
@@ -496,14 +548,11 @@
 
     if (!leafletMap) {
       leafletMap = L.map("mapContainer", { scrollWheelZoom: true, worldCopyJump: true });
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 18,
-        attribution: "&copy; OpenStreetMap contributors"
-      }).addTo(leafletMap);
       markerLayer = L.markerClusterGroup();
       routeLayer = L.layerGroup();
       leafletMap.on("zoomend moveend", refreshRoutesForCurrentView);
     }
+    ensureTileLayer();
 
     clearModeLayers();
     updateRouteHint(false);

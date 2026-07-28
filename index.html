@@ -307,8 +307,29 @@
     <div class="maplegend" id="mapHeatLegend" style="margin-bottom:8px;">
       <span>Fewer runs</span><span class="heatbar"></span><span>More runs</span>
     </div>
-    <div id="mapContainer"></div>
+    <div class="map-canvas-wrap">
+      <div id="mapContainer"></div>
+      <div class="map-side-panel" id="mapSidePanel" style="display:none;">
+        <button class="map-side-panel-close" id="mapSidePanelClose" type="button" aria-label="Close location details">×</button>
+        <div id="mapSidePanelContent"></div>
+      </div>
+    </div>
     <p class="note" style="margin-top:0.75rem;">Runs with GPS data in the selected period: <span id="mapCount">-</span></p>
+
+    <div class="map-stats" id="mapStats"></div>
+
+    <div class="map-lists">
+      <div class="map-list-panel">
+        <p class="map-list-title">Recent locations</p>
+        <p class="map-list-subtitle">Places where you've run recently</p>
+        <div id="mapRecentList"></div>
+      </div>
+      <div class="map-list-panel">
+        <p class="map-list-title">Top cities by distance</p>
+        <p class="map-list-subtitle">Total distance in the selected period</p>
+        <div id="mapTopCitiesList"></div>
+      </div>
+    </div>
   </section>
 
 </main>

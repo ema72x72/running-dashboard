@@ -5,11 +5,14 @@
   let selectedRunId = null;
   let runTrackCache = new Map();
   let runDetailMap = null;
-  let runRouteLayer = null;
-  let runMarkersLayer = null;
   let runHoverMarker = null;
   let runDetailChart = null;
   let runMetric = "pace";
+  let currentTrack = null;
+  let currentChartData = [];
+  let currentRunsRef = [];
+  let currentIndexRef = -1;
+  let swipeWired = false;
 
   function runTimestamp(run) {
     const value = run.start_local || `${run.d}T12:00:00`;
@@ -37,25 +40,52 @@
     runTrackCache.set(path, track);
     return track;
   }
-  function runLocation(run) {
-    return [run.location_city, run.location_state, run.location_country].filter(Boolean).join(", ") || "Location unavailable";
+  // The redesign is location-centric: the city becomes the page's primary
+  // identity (more memorable than generic Strava titles). If no location is
+  // known, fall back to the activity name so the header is never empty.
+  function runHeaderTitle(run) {
+    return run.location_city || run.location_country || run.name || "Run";
   }
-  function runStartText(run) {
+  function runStartLine(run) {
     const date = new Date(run.start_local || `${run.d}T12:00:00`);
     if (Number.isNaN(date.getTime())) return run.d;
-    return new Intl.DateTimeFormat("en-IT",{weekday:"long",day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}).format(date);
+    const weekday = new Intl.DateTimeFormat("en-IT",{weekday:"long"}).format(date);
+    const month = new Intl.DateTimeFormat("en-IT",{month:"short"}).format(date);
+    const hh = String(date.getHours()).padStart(2,"0"), mm = String(date.getMinutes()).padStart(2,"0");
+    return `${weekday}, ${date.getDate()} ${month} ${date.getFullYear()} at ${hh}:${mm}`;
+  }
+  function runHeaderSubtitleLines(run) {
+    const usedNameAsTitle = !run.location_city && !run.location_country;
+    const lines = [usedNameAsTitle ? "Location unavailable" : (run.name || "Run")];
+    lines.push(runStartLine(run));
+    return lines;
   }
   function detailValue(value, suffix="", digits=0) {
     if (value === null || value === undefined || !Number.isFinite(Number(value))) return "—";
     return `${Number(value).toLocaleString("en-IT",{maximumFractionDigits:digits})}${suffix}`;
   }
   function paceSecondsFromRun(run) { return run.km > 0 ? run.min * 60 / run.km : null; }
+  // Compact windowed dot indicator: shows at most 5 dots centred on the
+  // current run rather than one dot per historical run (there can be
+  // hundreds), consistent with the "compact navigation" spec.
+  function navDotsHtml(index, total) {
+    if (total <= 1) return "";
+    const windowSize = Math.min(5, total);
+    const start = Math.max(0, Math.min(index - Math.floor(windowSize/2), total - windowSize));
+    let html = "";
+    for (let i = start; i < start + windowSize; i++) html += `<span class="run-nav-dot${i===index?" active":""}"></span>`;
+    return html;
+  }
+  function metricToggleHtml() {
+    const metrics = [["pace","Pace"],["hr","Heart rate"],["elevation","Elevation"],["cadence","Cadence"]];
+    return metrics.map(([key,label])=>`<button data-metric="${key}" class="${runMetric===key?"active":""}">${label}</button>`).join("");
+  }
   function buildRunShell(run, index, runs) {
     const pace = paceSecondsFromRun(run);
     const latest = index === 0 ? '<span class="run-badge">Last run</span>' : '';
     return `
       <div class="run-hero">
-        <div class="run-titleline"><div><h2 class="run-title">${escapeHtml(run.name || "Run")}</h2><p class="run-subtitle">${escapeHtml(runStartText(run))}<br>${escapeHtml(runLocation(run))}</p></div>${latest}</div>
+        <div class="run-titleline"><div><h2 class="run-title">${escapeHtml(runHeaderTitle(run))}</h2><p class="run-subtitle">${runHeaderSubtitleLines(run).map(escapeHtml).join("<br>")}</p></div>${latest}</div>
         <div class="run-topmetrics">
           <div class="run-topmetric"><strong>${detailValue(run.km,"",2)}</strong><span>km</span></div>
           <div class="run-topmetric"><strong>${formatDuration(run.min)}</strong><span>Moving time</span></div>
@@ -64,15 +94,14 @@
         </div>
       </div>
       <div class="run-nav">
-        <button id="previousRunBtn" ${index >= runs.length-1 ? "disabled" : ""}>‹ Previous</button>
-        <span class="run-nav-date">${escapeHtml(run.d)}</span>
-        <button id="nextRunBtn" ${index <= 0 ? "disabled" : ""}>Next ›</button>
+        <button class="run-nav-btn" id="previousRunBtn" ${index >= runs.length-1 ? "disabled" : ""}>‹ Prev run</button>
+        <div class="run-nav-center"><span class="run-nav-badge">${escapeHtml(run.d)}</span><div class="run-nav-dots">${navDotsHtml(index, runs.length)}</div></div>
+        <button class="run-nav-btn" id="nextRunBtn" ${index <= 0 ? "disabled" : ""}>Next run ›</button>
       </div>
       <div class="run-map-card">
         <div id="runDetailMap"></div>
-        <div class="run-map-toolbar"><span class="chartlabel" style="margin:0">Colour route by</span><div class="metric-toggle" id="routeMetricToggle">
-          <button data-metric="pace" class="active">Pace</button><button data-metric="hr">Heart rate</button><button data-metric="elevation">Elevation</button><button data-metric="cadence">Cadence</button>
-        </div></div>
+        <div class="run-map-legend" id="runMapLegend"></div>
+        <div class="run-map-toolbar"><span class="chartlabel" style="margin:0">Colour route by</span><div class="metric-toggle" id="routeMetricToggle">${metricToggleHtml()}</div></div>
       </div>
       <div class="run-panel"><div class="run-detail-grid">
         ${runDetailCell("Distance",detailValue(run.km," km",2))}
@@ -131,53 +160,173 @@
     const values=(metric==="pace"||metric==="hr"||metric==="cadence")?movingAverage(raw,7):raw;
     return points.map((point,index)=>({point,value:values[index]}));
   }
+  // Palettes are ordered low-value -> high-value so the same ascending-index
+  // lookup (colorForValue) works for every metric. Pace goes fast(green) ->
+  // slow(red); heart rate goes calm(blue) -> max effort(red); elevation and
+  // cadence go low -> high, per the design memo.
   function metricPalette(metric) {
     if(metric==="hr") return ["#2563eb","#22c55e","#eab308","#f97316","#ef4444"];
     if(metric==="elevation") return ["#164e63","#0891b2","#22c55e","#eab308","#f97316"];
     if(metric==="cadence") return ["#7c3aed","#2563eb","#22c55e","#eab308","#ef4444"];
-    return ["#ef4444","#f97316","#eab308","#22c55e","#2563eb"];
+    return ["#22c55e","#84cc16","#eab308","#f97316","#ef4444"];
   }
   function quantile(values,q) {
     if(!values.length) return 0; const sorted=values.slice().sort((a,b)=>a-b); return sorted[Math.min(sorted.length-1,Math.floor((sorted.length-1)*q))];
   }
-  function segmentColour(value, breaks, palette, metric) {
-    let index=0; while(index<breaks.length && value>breaks[index]) index++;
-    if(metric==="pace") index=palette.length-1-index;
-    return palette[Math.max(0,Math.min(palette.length-1,index))];
+  // Shared colour context so the map route, the performance chart and the
+  // legend all use the exact same buckets for the currently selected metric
+  // (section 6/7/10/14 of the memo: route colouring, map<->chart sync,
+  // chart colouring and a consistent visual language).
+  function buildColorContext(track, metric) {
+    const series = metricSeries(track, metric);
+    const values = series.map(s=>s.value).filter(Number.isFinite);
+    const palette = metricPalette(metric);
+    const breaks = [];
+    for (let i = 1; i <= palette.length - 1; i++) breaks.push(quantile(values, i/palette.length));
+    return { metric, series, palette, breaks };
   }
-  function renderDetailedMap(track) {
+  function colorForValue(value, ctx) {
+    if (!ctx || !Number.isFinite(value)) return "#8a8f98";
+    let index = 0;
+    while (index < ctx.breaks.length && value > ctx.breaks[index]) index++;
+    return ctx.palette[Math.max(0, Math.min(ctx.palette.length-1, index))];
+  }
+  function legendMetricLabel(metric) {
+    return {pace:"Pace (min/km)", hr:"Heart rate (bpm)", elevation:"Elevation (m)", cadence:"Cadence (spm)"}[metric] || metric;
+  }
+  function legendValueFormat(metric, value) {
+    if (!Number.isFinite(value)) return "—";
+    return metric === "pace" ? fmtPace(value) : String(Math.round(value));
+  }
+  function renderMapLegend(ctx) {
+    const target = document.getElementById("runMapLegend"); if (!target) return;
+    const values = ctx && ctx.series ? ctx.series.map(s=>s.value).filter(Number.isFinite) : [];
+    if (!values.length) { target.innerHTML = ""; return; }
+    const min = Math.min(...values), max = Math.max(...values);
+    const ticks = [min, ...ctx.breaks, max];
+    const lastIndex = ticks.length - 1;
+    const tickHtml = ticks.map((v,i)=>`<span>${legendValueFormat(ctx.metric,v)}${(i===lastIndex && ctx.metric!=="elevation")?"+":""}</span>`).join("");
+    target.innerHTML = `<div class="run-legend-title">${legendMetricLabel(ctx.metric)}</div><div class="run-legend-bar" style="background:linear-gradient(to right, ${ctx.palette.join(",")})"></div><div class="run-legend-ticks">${tickHtml}</div>`;
+  }
+  function stopSegClickPropagation(e) {
+    if (typeof L !== "undefined" && L.DomEvent && L.DomEvent.stopPropagation) L.DomEvent.stopPropagation(e);
+  }
+  // Bidirectional map<->chart sync (memo section 7): hovering/tapping a
+  // route segment finds the nearest original track point and drives both
+  // the map hover marker and the chart's native active-element/tooltip
+  // state, matching how the chart already drives the map on hover.
+  function chartDataIndexForPointIndex(pointIndex) {
+    for (let i=0;i<currentChartData.length;i++) if (currentChartData[i].pointIndex === pointIndex) return i;
+    let best=-1, bestDiff=Infinity;
+    currentChartData.forEach((d,i)=>{ const diff=Math.abs(d.pointIndex-pointIndex); if(diff<bestDiff){bestDiff=diff;best=i;} });
+    return best;
+  }
+  function highlightFromMap(pointIndex) {
+    const point = (currentTrack?.points||[])[pointIndex];
+    if (runHoverMarker && point && Number.isFinite(Number(point.lat)) && Number.isFinite(Number(point.lon))) {
+      runHoverMarker.setLatLng([Number(point.lat), Number(point.lon)]);
+      runHoverMarker.setStyle({opacity:1, fillOpacity:1});
+    }
+    if (!runDetailChart || !currentChartData.length) return;
+    const dataIndex = chartDataIndexForPointIndex(pointIndex);
+    if (dataIndex < 0) return;
+    try {
+      runDetailChart.setActiveElements([{datasetIndex:0, index:dataIndex}]);
+      if (runDetailChart.tooltip) runDetailChart.tooltip.setActiveElements([{datasetIndex:0, index:dataIndex}], {x:0,y:0});
+      runDetailChart.update();
+    } catch (error) { /* not fatal: some environments stub Chart.js */ }
+  }
+  function clearMapHighlight() {
+    if (runHoverMarker) runHoverMarker.setStyle({opacity:0, fillOpacity:0});
+    if (!runDetailChart) return;
+    try {
+      runDetailChart.setActiveElements([]);
+      if (runDetailChart.tooltip) runDetailChart.tooltip.setActiveElements([], {x:0,y:0});
+      runDetailChart.update();
+    } catch (error) { /* not fatal: some environments stub Chart.js */ }
+  }
+  function attachSegmentInteractivity(polyline, idxs, rawPoints) {
+    function nearestIdx(latlng) {
+      let bestIdx = idxs[0], bestDist = Infinity;
+      idxs.forEach(idx => {
+        const p = rawPoints[idx];
+        const dLat = Number(p.lat)-latlng.lat, dLon = Number(p.lon)-latlng.lng;
+        const dist = dLat*dLat + dLon*dLon;
+        if (dist < bestDist) { bestDist = dist; bestIdx = idx; }
+      });
+      return bestIdx;
+    }
+    polyline.on("mousemove", e => { stopSegClickPropagation(e); highlightFromMap(nearestIdx(e.latlng)); });
+    polyline.on("click", e => { stopSegClickPropagation(e); highlightFromMap(nearestIdx(e.latlng)); });
+    polyline.on("mouseout", () => clearMapHighlight());
+  }
+  function renderDetailedMap(track, colorCtx) {
     const element = document.getElementById("runDetailMap");
     if (!element) return;
     try {
       if (runDetailMap) { runDetailMap.remove(); runDetailMap = null; }
       runHoverMarker = null;
       runDetailMap = L.map(element, {zoomControl:true});
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-        attribution:"&copy; OpenStreetMap &copy; CARTO", maxZoom:20
+      // Carto Voyager replaces the previous dark basemap: a lighter, more
+      // readable map so the coloured route becomes the visual focus.
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+        attribution:"&copy; OpenStreetMap contributors &copy; CARTO", maxZoom:20
       }).addTo(runDetailMap);
 
-      const points = Array.isArray(track?.points)
-        ? track.points.filter(p => Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lon)))
-        : [];
+      const rawPoints = Array.isArray(track?.points) ? track.points : [];
+      const validIdx = [];
+      for (let i=0;i<rawPoints.length;i++){
+        const p = rawPoints[i];
+        if (Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lon))) validIdx.push(i);
+      }
 
-      if (points.length < 2) {
+      if (validIdx.length < 2) {
         runDetailMap.setView([20,0],2);
         L.popup().setLatLng([20,0]).setContent("Detailed route unavailable for this run.").openOn(runDetailMap);
         return;
       }
 
-      // Draw one reliable base route first. This prevents a colouring error from
-      // making the entire route disappear.
       const maxPoints = 1200;
-      const step = Math.max(1, Math.ceil(points.length / maxPoints));
-      const sampled = points.filter((_, i) => i % step === 0 || i === points.length - 1);
-      const latlngs = sampled.map(p => [Number(p.lat), Number(p.lon)]);
-      const route = L.polyline(latlngs, {color:"#2a78d6", weight:5, opacity:.95}).addTo(runDetailMap);
+      const step = Math.max(1, Math.ceil(validIdx.length / maxPoints));
+      const sampledIdx = validIdx.filter((_, i) => i % step === 0 || i === validIdx.length-1);
+      const series = colorCtx && colorCtx.series ? colorCtx.series : null;
 
-      L.circleMarker(latlngs[0], {radius:7,color:"#fff",weight:2,fillColor:"#22c55e",fillOpacity:1}).bindTooltip("Start").addTo(runDetailMap);
-      L.circleMarker(latlngs[latlngs.length-1], {radius:7,color:"#fff",weight:2,fillColor:"#111827",fillOpacity:1}).bindTooltip("Finish").addTo(runDetailMap);
-      runHoverMarker = L.circleMarker(latlngs[0], {radius:6,color:"#fff",weight:2,fillColor:"#fc4c02",fillOpacity:0,opacity:0,interactive:false}).addTo(runDetailMap);
-      runDetailMap.fitBounds(route.getBounds(), {padding:[20,20]});
+      // Merge consecutive same-colour points into one polyline each instead
+      // of drawing one polyline per pair of points: far fewer layers, same
+      // smooth gradient look as the mockup.
+      const segments = [];
+      let currentColor = null, currentLatLngs = [], currentIdxs = [];
+      sampledIdx.forEach(idx => {
+        const p = rawPoints[idx];
+        const latlng = [Number(p.lat), Number(p.lon)];
+        const value = series ? series[idx]?.value : NaN;
+        const color = colorForValue(value, colorCtx);
+        if (color !== currentColor) {
+          if (currentLatLngs.length > 1) segments.push({color: currentColor, latlngs: currentLatLngs, idxs: currentIdxs});
+          currentColor = color;
+          currentLatLngs = currentLatLngs.length ? [currentLatLngs[currentLatLngs.length-1], latlng] : [latlng];
+          currentIdxs = currentIdxs.length ? [currentIdxs[currentIdxs.length-1], idx] : [idx];
+        } else {
+          currentLatLngs.push(latlng);
+          currentIdxs.push(idx);
+        }
+      });
+      if (currentLatLngs.length > 1) segments.push({color: currentColor, latlngs: currentLatLngs, idxs: currentIdxs});
+
+      const boundsLatLngs = [];
+      segments.forEach(seg => {
+        const polyline = L.polyline(seg.latlngs, {color: seg.color, weight:5, opacity:.95}).addTo(runDetailMap);
+        attachSegmentInteractivity(polyline, seg.idxs, rawPoints);
+        seg.latlngs.forEach(ll => boundsLatLngs.push(ll));
+      });
+
+      const startLatLng = [Number(rawPoints[validIdx[0]].lat), Number(rawPoints[validIdx[0]].lon)];
+      const finishLatLng = [Number(rawPoints[validIdx[validIdx.length-1]].lat), Number(rawPoints[validIdx[validIdx.length-1]].lon)];
+      L.circleMarker(startLatLng, {radius:7,color:"#fff",weight:2,fillColor:"#22c55e",fillOpacity:1}).bindTooltip("Start").addTo(runDetailMap);
+      L.circleMarker(finishLatLng, {radius:7,color:"#fff",weight:2,fillColor:"#111827",fillOpacity:1}).bindTooltip("Finish").addTo(runDetailMap);
+      runHoverMarker = L.circleMarker(startLatLng, {radius:6,color:"#fff",weight:2,fillColor:"#fc4c02",fillOpacity:0,opacity:0,interactive:false}).addTo(runDetailMap);
+
+      if (boundsLatLngs.length) runDetailMap.fitBounds(L.latLngBounds(boundsLatLngs), {padding:[20,20]});
       setTimeout(() => runDetailMap && runDetailMap.invalidateSize(), 50);
     } catch (error) {
       console.error("Run map rendering failed", error);
@@ -199,11 +348,18 @@
     runHoverMarker.setLatLng([point.lat,point.lon]);
     runHoverMarker.setStyle({opacity:1,fillOpacity:1});
   }
-  function renderRunChart(track) {
+  function renderRunChart(track, colorCtx) {
     const canvas=document.getElementById("runPerformanceChart"); if(!canvas) return;
-    const data=trackSeries(track,runMetric); if(runDetailChart) runDetailChart.destroy();
+    const data=trackSeries(track,runMetric); currentChartData=data;
+    if(runDetailChart) runDetailChart.destroy();
     const label={pace:"Pace",hr:"Heart rate",elevation:"Elevation",cadence:"Cadence"}[runMetric]||runMetric;
-    runDetailChart=new Chart(canvas,{type:"line",data:{datasets:[{data,borderColor:runMetric==="hr"?"#ef4444":"#2a78d6",borderWidth:2,pointRadius:0,tension:.28,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"nearest",intersect:false},onHover:(event,elements)=>{ if(elements.length) showRunPoint(track,data[elements[0].index]); else if(runHoverMarker) runHoverMarker.setStyle({opacity:0,fillOpacity:0}); },plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${label}: ${runMetric==="pace"?fmtPace(c.parsed.y):Math.round(c.parsed.y)}`}}},scales:{x:{type:"linear",title:{display:true,text:"km"},grid:{color:getGridColor()}},y:{reverse:runMetric==="pace",grid:{color:getGridColor()},ticks:{callback:v=>runMetric==="pace"?fmtPace(v):v}}}}});
+    const baseColor=(colorCtx && colorCtx.palette && colorCtx.palette[0]) || "#2a78d6";
+    runDetailChart=new Chart(canvas,{type:"line",data:{datasets:[{
+      data,borderColor:baseColor,borderWidth:2,pointRadius:0,pointHoverRadius:5,tension:.28,spanGaps:true,
+      // Colour the line the same way as the route on the map, segment by
+      // segment, using the shared colour context (memo section 10/14).
+      segment:{borderColor:ctx=>colorForValue(data[ctx.p0DataIndex]?.y, colorCtx)}
+    }]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"nearest",intersect:false},onHover:(event,elements)=>{ if(elements.length) showRunPoint(track,data[elements[0].index]); else if(runHoverMarker) runHoverMarker.setStyle({opacity:0,fillOpacity:0}); },plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${label}: ${runMetric==="pace"?fmtPace(c.parsed.y):Math.round(c.parsed.y)}`}}},scales:{x:{type:"linear",title:{display:true,text:"km"},grid:{color:getGridColor()}},y:{reverse:runMetric==="pace",grid:{color:getGridColor()},ticks:{callback:v=>runMetric==="pace"?fmtPace(v):v}}}}});
   }
   function buildSplits(track) {
     const points=track?.points||[]; if(points.length<2) return [];
@@ -218,7 +374,24 @@
   function renderSplits(track) {
     const target=document.getElementById("runSplits"), splits=buildSplits(track); if(!target) return;
     if(!splits.length){ target.innerHTML='<p class="empty">Split data unavailable</p>'; return; }
-    target.innerHTML=`<table class="splits-table"><thead><tr><th>KM</th><th>Pace</th><th>HR</th><th>Elev.</th></tr></thead><tbody>${splits.map(s=>`<tr><td>${s.km}</td><td>${s.pace?fmtPace(s.pace):"—"}</td><td>${s.hr?Math.round(s.hr):"—"}</td><td>${s.elev===null?"—":`${s.elev>0?"+":""}${Math.round(s.elev)} m`}</td></tr>`).join("")}</tbody></table>`;
+    // Highlight the fastest/slowest split, the highest HR and the greatest
+    // elevation change, per the memo (section 9).
+    const paceValues=splits.map(s=>s.pace).filter(Number.isFinite);
+    const fastestPace=paceValues.length?Math.min(...paceValues):null;
+    const slowestPace=paceValues.length?Math.max(...paceValues):null;
+    const hrValues=splits.map(s=>s.hr).filter(Number.isFinite);
+    const maxHr=hrValues.length?Math.max(...hrValues):null;
+    const elevValues=splits.map(s=>s.elev).filter(Number.isFinite);
+    const maxAbsElev=elevValues.length?Math.max(...elevValues.map(v=>Math.abs(v))):null;
+    target.innerHTML=`<table class="splits-table"><thead><tr><th>KM</th><th>Pace</th><th>HR</th><th>Elev.</th></tr></thead><tbody>${splits.map(s=>{
+      const isFastest=Number.isFinite(s.pace)&&s.pace===fastestPace;
+      const isSlowest=!isFastest&&Number.isFinite(s.pace)&&s.pace===slowestPace;
+      const isMaxHr=Number.isFinite(s.hr)&&s.hr===maxHr;
+      const isMaxElev=maxAbsElev>0&&Number.isFinite(s.elev)&&Math.abs(s.elev)===maxAbsElev;
+      const paceClass=isFastest?"split-fastest":(isSlowest?"split-slowest":"");
+      const trophy=isFastest?'<span class="split-trophy" title="Fastest split">🏆</span>':"";
+      return `<tr><td>${trophy}${s.km}</td><td class="${paceClass}">${s.pace?fmtPace(s.pace):"—"}</td><td class="${isMaxHr?"split-hr-max":""}">${s.hr?Math.round(s.hr):"—"}</td><td class="${isMaxElev?"split-elev-max":""}">${s.elev===null?"—":`${s.elev>0?"+":""}${Math.round(s.elev)} m`}</td></tr>`;
+    }).join("")}</tbody></table>`;
   }
   function renderRunInsights(run,track) {
     const target=document.getElementById("runInsights"); if(!target) return; const insights=[];
@@ -234,7 +407,15 @@
     const prev=document.getElementById("previousRunBtn"), next=document.getElementById("nextRunBtn");
     if(prev) prev.onclick=()=>{ const target=runs[index+1]; if(target) selectRun(runKey(target)); };
     if(next) next.onclick=()=>{ const target=runs[index-1]; if(target) selectRun(runKey(target)); };
-    document.querySelectorAll("#routeMetricToggle button").forEach(button=>button.onclick=()=>{ document.querySelectorAll("#routeMetricToggle button").forEach(b=>b.classList.remove("active")); button.classList.add("active"); runMetric=button.dataset.metric; renderDetailedMap(track); renderRunChart(track); });
+    document.querySelectorAll("#routeMetricToggle button").forEach(button=>button.onclick=()=>{
+      document.querySelectorAll("#routeMetricToggle button").forEach(b=>b.classList.remove("active"));
+      button.classList.add("active");
+      runMetric=button.dataset.metric;
+      const ctx=buildColorContext(track,runMetric);
+      renderDetailedMap(track,ctx);
+      renderRunChart(track,ctx);
+      renderMapLegend(ctx);
+    });
     const compare=document.getElementById("compareSimilarBtn"); if(compare) compare.onclick=()=>compareSimilarRun(run,runs);
   }
   function runKey(run) { return run?.id || `${run?.d}-${run?.km}-${run?.min}`; }
@@ -253,10 +434,38 @@
     const similar=candidates.slice().sort((a,b)=>Math.abs(a.km-run.km)-Math.abs(b.km-run.km))[0]; const paceA=paceSecondsFromRun(run), paceB=paceSecondsFromRun(similar);
     target.style.display="block"; target.innerHTML=`Closest-distance run: <strong>${escapeHtml(similar.d)}</strong> · ${detailValue(similar.km," km",2)} · ${paceB?fmtPace(paceB):"—"}/km. ${paceA&&paceB?(paceA<paceB?"The selected run was faster.":"The comparison run was faster."):""}`;
   }
+  // Wired once on the persistent #runDetailContent node (its children are
+  // replaced on every render, but the node itself survives), mirroring the
+  // Map tab's swipe pattern. Reads the current run/index via the module-level
+  // refs kept fresh by renderSelectedRun so it always acts on live state.
+  function wireRunSwipeOnce() {
+    if (swipeWired) return;
+    const el = document.getElementById("runDetailContent");
+    if (!el || !el.addEventListener) return;
+    swipeWired = true;
+    let startX = null, startY = null;
+    el.addEventListener("touchstart", e => {
+      if (!e.touches || !e.touches.length) return;
+      startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+    }, {passive:true});
+    el.addEventListener("touchend", e => {
+      if (startX === null) return;
+      const touch = e.changedTouches && e.changedTouches[0];
+      const sx = startX, sy = startY; startX = null; startY = null;
+      if (!touch) return;
+      const dx = touch.clientX - sx, dy = touch.clientY - (sy||0);
+      if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      const runs = currentRunsRef, index = currentIndexRef;
+      const target = dx < 0 ? runs[index+1] : runs[index-1]; // swipe left -> next run, right -> previous
+      if (target) selectRun(runKey(target));
+    }, {passive:true});
+  }
   async function renderSelectedRun(run,runs) {
     const content = document.getElementById("runDetailContent");
     const index = runs.findIndex(r => String(runKey(r)) === String(runKey(run)));
+    currentRunsRef = runs; currentIndexRef = index;
     content.innerHTML = buildRunShell(run,index,runs);
+    wireRunSwipeOnce();
 
     // Navigation must work even if the track request or a renderer fails.
     bindRunControls(run,index,runs,null);
@@ -267,14 +476,17 @@
     } catch (error) {
       console.error("Track loading failed", trackPath(run), error);
     }
+    currentTrack = track;
+    const colorCtx = buildColorContext(track, runMetric);
 
     // Render each component independently so one failure cannot blank the rest.
-    try { renderDetailedMap(track); } catch (error) { console.error("Map failed", error); }
-    try { renderRunChart(track); } catch (error) {
+    try { renderDetailedMap(track,colorCtx); } catch (error) { console.error("Map failed", error); }
+    try { renderRunChart(track,colorCtx); } catch (error) {
       console.error("Performance chart failed", error);
       const canvas = document.getElementById("runPerformanceChart");
       if (canvas?.parentElement) canvas.parentElement.innerHTML = '<p class="empty">Performance data could not be rendered.</p>';
     }
+    try { renderMapLegend(colorCtx); } catch (error) { console.error("Legend failed", error); }
     try { renderSplits(track); } catch (error) {
       console.error("Splits failed", error);
       const target = document.getElementById("runSplits");

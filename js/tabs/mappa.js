@@ -1,9 +1,20 @@
-// Map tab: worldwide heatmap / pins / routes of every run with GPS data,
-// plus a geographical information layer (Phase 1), location-based Pins
-// exploration (Phase 2), and now Routes exploration with an activity
-// panel and cross-tab navigation into Run Details (Phases 3-4 of the Map
-// Tab Redesign memo). Phase 5 (bottom-sheet animation, deep accessibility
+// Map tab: worldwide pins / routes of every run with GPS data, plus a
+// geographical information layer (Phase 1), location-based Pins
+// exploration (Phase 2), and Routes exploration with an activity panel
+// and cross-tab navigation into Run Details (Phases 3-4 of the Map Tab
+// Redesign memo). Phase 5 (bottom-sheet animation, deep accessibility
 // polish) is not part of this pass.
+//
+// Revision after live user testing of the first version: the standalone
+// Heatmap mode was dropped (Routes mode already falls back to the same
+// heatmap when zoomed out, so a third button was redundant); the base
+// map tiles are fixed to a light style (a dark basemap tested elegant
+// but hard to read); Pins mode now shows the actual number of RUNS in
+// a cluster instead of Leaflet.markercluster's default "number of
+// markers" count; a single click/tap on empty map zooms in; overlapping
+// runs at the same spot in Routes mode can be cycled with prev/next
+// controls or a swipe; and "Recent locations" was replaced with "Top
+// countries by distance" to mirror "Top cities by distance".
 (function () {
   const {
     filteredRuns, getRuns, getSelectedYears, fmtPace, fmtKm, fmtDate, fetchJson, dirty,
@@ -14,35 +25,22 @@
   let heatLayer = null;
   let routeLayer = null;
   let tileLayer = null;
-  let tileLayerIsDark = null;
-  let mapMode = "heat";
+  // Default mode is "routes": at low zoom it falls back to the heatmap
+  // (preserving the global overview from memo section 1), and reveals
+  // individual GPS routes as the user zooms in - a single mode that
+  // covers what used to be two separate buttons (Heatmap + Routes).
+  let mapMode = "routes";
   let currentGroups = [];
   let currentRuns = [];
 
-  /* ---------- Theme-aware base map (matches the app's light/dark toggle) ---------- */
-  // The rest of the app (including the Run Details map in js/tabs/runs.js)
-  // already uses CartoDB's dark basemap; this tab previously always used
-  // plain OpenStreetMap tiles regardless of theme, which is why it looked
-  // washed-out/light next to the mockup and the rest of a dark-mode UI.
-  // Re-checked on every render (not just once at map creation) so a
-  // theme toggle - which redraws charts via markAllDirty(), not the
-  // Leaflet map - still picks up the right tiles next time this tab
-  // renders, the same way getGridColor() is re-read on every chart draw.
-  function isDarkTheme() {
-    const explicit = document.documentElement.getAttribute("data-theme");
-    return explicit ? explicit === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
-  }
-  function ensureTileLayer() {
-    const dark = isDarkTheme();
-    if (tileLayer && tileLayerIsDark === dark) return;
-    if (tileLayer) leafletMap.removeLayer(tileLayer);
-    const style = dark ? "dark_all" : "light_all";
-    tileLayer = L.tileLayer(`https://{s}.basemaps.cartocdn.com/${style}/{z}/{x}/{y}{r}.png`, {
-      maxZoom: 20,
-      attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
-    }).addTo(leafletMap);
-    tileLayerIsDark = dark;
-  }
+  /* ---------- Base map ---------- */
+  // Fixed to a light basemap: a dark one (CartoDB dark_all, matching the
+  // Run Details map elsewhere in the app) was tried first but tested
+  // hard to read against the heatmap/pin overlays, so light_all (also
+  // CartoDB, same tile family/attribution) is used unconditionally
+  // regardless of the app's own light/dark theme toggle.
+  const TILE_URL = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+  const TILE_ATTRIBUTION = "&copy; OpenStreetMap contributors &copy; CARTO";
 
   /* ---------- Routes mode state (memo sections 3.3, 4, 10) ---------- */
   // Recommended zoom threshold from the memo (11-12); picked 12 as the
@@ -57,31 +55,44 @@
   // and the edge case "large dense areas: ... limit visible routes").
   const ROUTE_MAX_VISIBLE = 150;
   const ROUTE_MAX_CONCURRENT_FETCHES = 4;
+  // "Nearby/overlapping" for the activity panel's prev/next cycling is
+  // defined as a fixed PIXEL distance at the current zoom, not a fixed
+  // geographic one: a first version used a flat ~100m radius, which on
+  // real data pulled in 400+ runs at once for a runner whose runs mostly
+  // start from home (100m absolute is "the same house", not "visually
+  // overlapping on screen"). Converting the pixel radius to degrees at
+  // the current zoom keeps the definition tied to what's actually
+  // visually overlapping, however far in the user has zoomed.
+  const NEARBY_PIXEL_RADIUS = 14;
+  function nearbyThresholdDeg(lat, zoom) {
+    const z = Number.isFinite(zoom) ? zoom : ROUTE_ZOOM_THRESHOLD;
+    const metersPerPixel = (156543.03392 * Math.cos(lat * Math.PI / 180)) / Math.pow(2, z);
+    const metersPerDegree = 111320 * Math.cos(lat * Math.PI / 180) || 1;
+    return (metersPerPixel * NEARBY_PIXEL_RADIUS) / metersPerDegree;
+  }
 
   let routeTrackCache = new Map(); // activity id (string) -> simplified [lat,lon][] or null (load failed / no track)
   let routeRenderToken = 0; // bumped on every bounds/zoom recompute; stale async loads are ignored
   let selectedRouteId = null;
   let lastVisibleRuns = [];
+  let activeNearbyRuns = [];
+  let activeNearbyIndex = 0;
 
   function setMapMode(mode) {
     mapMode = mode;
-    document.getElementById("mapHeatBtn")?.classList.toggle("active", mode === "heat");
     document.getElementById("mapPinsBtn")?.classList.toggle("active", mode === "pins");
     document.getElementById("mapRoutesBtn")?.classList.toggle("active", mode === "routes");
-    const legend = document.getElementById("mapHeatLegend");
-    if (legend) legend.style.display = mode === "heat" ? "flex" : "none";
     dirty.mappa = true;
     renderMappa();
     dirty.mappa = false;
   }
 
-  document.getElementById("mapHeatBtn")?.addEventListener("click", () => setMapMode("heat"));
   document.getElementById("mapPinsBtn")?.addEventListener("click", () => setMapMode("pins"));
   document.getElementById("mapRoutesBtn")?.addEventListener("click", () => setMapMode("routes"));
   document.getElementById("mapSidePanelClose")?.addEventListener("click", closeLocationPanel);
   document.addEventListener("keydown", e => { if (e.key === "Escape") closeLocationPanel(); });
 
-  /* ---------- Fullscreen (easy win from the memo's mockup toolbar) ---------- */
+  /* ---------- Fullscreen ---------- */
   function isFullscreen() { return !!document.fullscreenElement; }
   function toggleFullscreen() {
     const wrap = document.querySelector(".map-canvas-wrap");
@@ -100,6 +111,16 @@
 
   function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>'"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[c]));
+  }
+  function stopMarkerClickPropagation(e) {
+    // Prevents a click on a pin/route/cluster from also being seen by
+    // the map's own "click empty space to zoom in" handler below.
+    if (typeof L !== "undefined" && L.DomEvent && L.DomEvent.stopPropagation) L.DomEvent.stopPropagation(e);
+  }
+  function handleMapBackgroundClick(e) {
+    if (!leafletMap || !e || !e.latlng) return;
+    const currentZoom = leafletMap.getZoom ? leafletMap.getZoom() : 2;
+    leafletMap.setView(e.latlng, Math.min(currentZoom + 2, 18));
   }
 
   /* ---------- Location grouping (memo sections 6.1 and 13) ---------- */
@@ -150,6 +171,22 @@
       g.label = g.isUnknown ? "Unknown location" : [g.city, g.country].filter(Boolean).join(", ");
     });
     return [...groups.values()];
+  }
+
+  // One entry per country, aggregating across all of that country's
+  // location groups (memo section 8's "Top cities by distance", applied
+  // one level up per the user's request).
+  function buildCountryGroups(groups) {
+    const byCountry = new Map();
+    groups.filter(g => !g.isUnknown && g.country).forEach(g => {
+      if (!byCountry.has(g.country)) {
+        byCountry.set(g.country, { country: g.country, km: 0, n: 0, cities: new Set(), topCity: null });
+      }
+      const c = byCountry.get(g.country);
+      c.km += g.km; c.n += g.n; c.cities.add(g.key);
+      if (!c.topCity || g.km > c.topCity.km) c.topCity = g;
+    });
+    return [...byCountry.values()];
   }
 
   /* ---------- Geographical summary cards (memo section 6) ---------- */
@@ -263,24 +300,28 @@
     `).join("");
   }
 
-  /* ---------- Recent locations (memo section 7) ---------- */
-  function renderRecentLocations(groups) {
-    const el = document.getElementById("mapRecentList");
+  /* ---------- Top countries by distance (replaces Recent locations) ---------- */
+  function renderTopCountries(groups) {
+    const el = document.getElementById("mapTopCountriesList");
     if (!el) return;
-    const recent = groups.filter(g => !g.isUnknown).sort((a, b) => b.lastDate.localeCompare(a.lastDate)).slice(0, 5);
-    if (!recent.length) { el.innerHTML = '<p class="empty">No locations in the selected period</p>'; return; }
-    el.innerHTML = recent.map(g => `
-      <div class="map-list-row" data-key="${escapeHtml(g.key)}">
-        <div class="map-list-row-icon">📍</div>
-        <div class="map-list-row-main">
-          <p class="map-list-row-title">${escapeHtml(g.city)}, ${escapeHtml(g.country)}</p>
-          <p class="map-list-row-sub">${fmtDate(new Date(g.lastDate + "T00:00:00"))} · ${g.n} run${g.n === 1 ? "" : "s"}</p>
+    const countryGroups = buildCountryGroups(groups);
+    const top = countryGroups.slice().sort((a, b) => b.km - a.km).slice(0, 6);
+    if (!top.length) { el.innerHTML = '<p class="empty">No locations in the selected period</p>'; return; }
+    const maxKm = top[0].km || 1;
+    el.innerHTML = top.map((c, i) => `
+      <div class="map-topcity-row" data-country="${escapeHtml(c.country)}">
+        <span class="map-topcity-rank">${i + 1}</span>
+        <div class="map-topcity-main">
+          <p class="map-topcity-title">${escapeHtml(c.country)} · ${c.cities.size} cit${c.cities.size === 1 ? "y" : "ies"} · ${c.n} run${c.n === 1 ? "" : "s"}</p>
+          <div class="map-topcity-bar-track"><div class="map-topcity-bar" style="width:${Math.max(4, (c.km / maxKm) * 100)}%"></div></div>
         </div>
-        <div class="map-list-row-value">${fmtKm(g.km)} km</div>
+        <span class="map-topcity-value">${fmtKm(c.km)} km</span>
       </div>
     `).join("");
-    el.querySelectorAll(".map-list-row").forEach(row => {
-      row.addEventListener("click", () => selectLocationByKey(row.dataset.key));
+    el.querySelectorAll(".map-topcity-row").forEach(row => {
+      row.addEventListener("click", () => {
+        selectCountry(countryGroups.find(c => c.country === row.dataset.country));
+      });
     });
   }
 
@@ -327,6 +368,19 @@
       </div>
     `;
   }
+  function countryPanelHtml(c) {
+    return `
+      <div class="map-panel-header">
+        <p class="map-panel-city">${escapeHtml(c.country)}</p>
+        <p class="map-panel-country">${c.cities.size} cit${c.cities.size === 1 ? "y" : "ies"}</p>
+      </div>
+      <div class="map-panel-grid">
+        <div class="map-panel-item"><span>Runs</span><strong>${c.n}</strong></div>
+        <div class="map-panel-item"><span>Total distance</span><strong>${fmtKm(c.km)} km</strong></div>
+        <div class="map-panel-item" style="grid-column:1 / -1;"><span>Top city</span><strong>${c.topCity ? `${escapeHtml(c.topCity.city)} · ${fmtKm(c.topCity.km)} km` : "—"}</strong></div>
+      </div>
+    `;
+  }
 
   /* ---------- Side panel: activity summary (memo section 5.1) ---------- */
   function runStartText(run) {
@@ -334,10 +388,17 @@
     if (Number.isNaN(date.getTime())) return run.d;
     return new Intl.DateTimeFormat("en-IT", { weekday: "short", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(date);
   }
-  function activityPanelHtml(run) {
+  function activityPanelHtml(run, nearbyCount, nearbyIndex) {
     const pace = run.km > 0 && run.min > 0 ? (run.min * 60) / run.km : null;
     const location = [run.location_city, run.location_country].filter(Boolean).join(", ");
+    const nav = nearbyCount > 1 ? `
+      <div class="map-panel-nav">
+        <button class="map-panel-nav-btn" id="mapActivityPrev" type="button" aria-label="Previous overlapping run">‹</button>
+        <span class="map-panel-nav-label">${nearbyIndex + 1} of ${nearbyCount} runs here</span>
+        <button class="map-panel-nav-btn" id="mapActivityNext" type="button" aria-label="Next overlapping run">›</button>
+      </div>` : "";
     return `
+      ${nav}
       <div class="map-panel-header">
         <p class="map-panel-city">${escapeHtml(run.name || "Run")}</p>
         <p class="map-panel-country">${escapeHtml(runStartText(run))}${location ? " · " + escapeHtml(location) : ""}</p>
@@ -357,21 +418,95 @@
   }
 
   function openLocationPanel(g) {
+    activeNearbyRuns = [];
     const panel = document.getElementById("mapSidePanel");
     const content = document.getElementById("mapSidePanelContent");
     if (!panel || !content || !g) return;
     content.innerHTML = locationPanelHtml(g);
     panel.style.display = "block";
   }
-  function openActivityPanel(run) {
+  function openCountryPanel(c) {
+    activeNearbyRuns = [];
     const panel = document.getElementById("mapSidePanel");
     const content = document.getElementById("mapSidePanelContent");
-    if (!panel || !content || !run) return;
-    content.innerHTML = activityPanelHtml(run);
+    if (!panel || !content || !c) return;
+    content.innerHTML = countryPanelHtml(c);
+    panel.style.display = "block";
+  }
+  // Runs starting within ~100m of `run` (itself included), used so
+  // overlapping/stacked runs at the same spot can be cycled through
+  // instead of only ever showing whichever one happened to be drawn
+  // (and therefore clicked) on top (memo section 13 edge case).
+  // Even with a zoom-scaled pixel radius, a runner whose runs mostly
+  // start from the same house/gym can still have hundreds of "nearby"
+  // matches at a moderate zoom - not usefully "overlapping routes to
+  // cycle through", just "the same neighbourhood". Capped so prev/next
+  // never has to page through dozens of entries; when over the cap, the
+  // runs closest in TIME to the clicked one win, on the assumption that
+  // "same spot, a day or two apart" is what someone actually meant to
+  // compare, not an arbitrary slice.
+  const NEARBY_MAX_RESULTS = 12;
+  function findNearbyRuns(run) {
+    const zoom = leafletMap && leafletMap.getZoom ? leafletMap.getZoom() : ROUTE_ZOOM_THRESHOLD;
+    const threshold = nearbyThresholdDeg(run.lat, zoom);
+    const matches = currentRuns.filter(r => Math.abs(r.lat - run.lat) < threshold && Math.abs(r.lon - run.lon) < threshold);
+    const byDate = (a, b) => a.d.localeCompare(b.d) || String(a.id).localeCompare(String(b.id));
+    if (matches.length <= NEARBY_MAX_RESULTS) return matches.sort(byDate);
+    const runTime = new Date(run.d).getTime();
+    return matches
+      .map(r => ({ r, dt: Math.abs(new Date(r.d).getTime() - runTime) }))
+      .sort((a, b) => a.dt - b.dt)
+      .slice(0, NEARBY_MAX_RESULTS)
+      .map(x => x.r)
+      .sort(byDate);
+  }
+  function renderActivityPanel() {
+    const panel = document.getElementById("mapSidePanel");
+    const content = document.getElementById("mapSidePanelContent");
+    if (!panel || !content || !activeNearbyRuns.length) return;
+    const run = activeNearbyRuns[activeNearbyIndex];
+    content.innerHTML = activityPanelHtml(run, activeNearbyRuns.length, activeNearbyIndex);
     panel.style.display = "block";
     document.getElementById("mapOpenRunDetails")?.addEventListener("click", () => openRunDetails(run));
+    document.getElementById("mapActivityPrev")?.addEventListener("click", () => stepActivity(-1));
+    document.getElementById("mapActivityNext")?.addEventListener("click", () => stepActivity(1));
+    selectedRouteId = String(run.id);
+    drawRoutePolylines(lastVisibleRuns);
   }
+  function stepActivity(delta) {
+    if (activeNearbyRuns.length < 2) return;
+    activeNearbyIndex = (activeNearbyIndex + delta + activeNearbyRuns.length) % activeNearbyRuns.length;
+    renderActivityPanel();
+  }
+  function openActivityPanel(run) {
+    activeNearbyRuns = findNearbyRuns(run);
+    const idx = activeNearbyRuns.findIndex(r => String(r.id) === String(run.id));
+    activeNearbyIndex = idx >= 0 ? idx : 0;
+    renderActivityPanel();
+  }
+  // Wired once (not per-render) directly on the persistent panel content
+  // element, so repeated navigations don't stack up duplicate listeners.
+  function wireActivityPanelSwipeOnce() {
+    const content = document.getElementById("mapSidePanelContent");
+    if (!content) return;
+    let startX = null;
+    content.addEventListener("touchstart", e => {
+      if (!activeNearbyRuns.length || e.touches.length !== 1) return;
+      startX = e.touches[0].clientX;
+    }, { passive: true });
+    content.addEventListener("touchend", e => {
+      if (startX === null || !activeNearbyRuns.length) return;
+      const touch = e.changedTouches && e.changedTouches[0];
+      const endX = touch ? touch.clientX : startX;
+      const delta = endX - startX;
+      startX = null;
+      if (Math.abs(delta) < 40) return; // ignore taps/small movements
+      stepActivity(delta < 0 ? 1 : -1); // swipe left -> next, right -> previous
+    }, { passive: true });
+  }
+
   function closeLocationPanel() {
+    activeNearbyRuns = [];
     const panel = document.getElementById("mapSidePanel");
     if (panel) panel.style.display = "none";
   }
@@ -385,6 +520,15 @@
   }
   function selectLocationByKey(key) {
     selectLocation(currentGroups.find(group => group.key === key));
+  }
+  function selectCountry(c) {
+    if (!c) return;
+    const memberGroups = currentGroups.filter(g => !g.isUnknown && g.country === c.country);
+    if (leafletMap && memberGroups.length) {
+      const bounds = L.latLngBounds(memberGroups.map(g => [g.lat, g.lon]));
+      leafletMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
+    }
+    openCountryPanel(c);
   }
 
   /* ---------- Routes mode (memo sections 3.3, 4, 10, 13) ---------- */
@@ -432,6 +576,10 @@
     const hint = document.getElementById("mapRouteHint");
     if (hint) hint.style.display = show ? "block" : "none";
   }
+  function updateHeatLegendVisibility(show) {
+    const legend = document.getElementById("mapHeatLegend");
+    if (legend) legend.style.display = show ? "flex" : "none";
+  }
   function drawRoutePolylines(runsToShow) {
     if (!routeLayer) return;
     routeLayer.clearLayers();
@@ -447,14 +595,14 @@
           weight: isSelected ? 5 : 3,
           opacity: isSelected ? 0.95 : 0.6,
         });
-        line.on("click", () => selectRoute(run));
+        line.on("click", e => { stopMarkerClickPropagation(e); selectRoute(run); });
         routeLayer.addLayer(line);
       } else if (routeTrackCache.has(id)) {
         // Track finished loading but has no usable points (or no track
         // file at all): still show the run as a point instead of making
         // it disappear from Routes mode (memo section 13 edge case).
         const marker = L.circleMarker([run.lat, run.lon], { radius: 5, color: "#2a78d6", weight: 2, fillColor: "#2a78d6", fillOpacity: 0.5 });
-        marker.on("click", () => selectRoute(run));
+        marker.on("click", e => { stopMarkerClickPropagation(e); selectRoute(run); });
         routeLayer.addLayer(marker);
       }
       // Not yet in the cache (still loading): draw nothing this pass;
@@ -462,11 +610,10 @@
     });
   }
   function selectRoute(run) {
-    selectedRouteId = String(run.id);
-    drawRoutePolylines(lastVisibleRuns);
     openActivityPanel(run);
   }
   function renderHeatLayer(runs) {
+    updateHeatLegendVisibility(true);
     if (heatLayer && leafletMap.hasLayer(heatLayer)) return;
     const heatPoints = runs.map(r => [r.lat, r.lon, 0.65]);
     heatLayer = L.heatLayer(heatPoints, {
@@ -487,6 +634,7 @@
       return;
     }
     updateRouteHint(false);
+    updateHeatLegendVisibility(false);
     if (heatLayer && leafletMap.hasLayer(heatLayer)) leafletMap.removeLayer(heatLayer);
     if (!leafletMap.hasLayer(routeLayer)) leafletMap.addLayer(routeLayer);
 
@@ -511,16 +659,38 @@
     renderRoutesMode(currentRuns);
   }
 
-  function renderHeatMode(runs) { renderHeatLayer(runs); }
+  /* ---------- Pins mode ---------- */
+  // Cluster/marker badges show the SUM of runs at that location (or
+  // group of nearby locations), not Leaflet.markercluster's default
+  // "number of markers in this cluster" - the default would count
+  // distinct places, not activities, so the numbers on screen wouldn't
+  // add up to "Runs with GPS data in the selected period" like the user
+  // expects when "All" years are selected.
+  function clusterBadgeColor(count) {
+    if (count >= 100) return "red";
+    if (count >= 20) return "orange";
+    return "green";
+  }
+  function runCountDivIcon(count, size) {
+    const color = clusterBadgeColor(count);
+    return L.divIcon({
+      html: `<div class="map-cluster-badge map-cluster-badge-${color}" style="width:${size}px;height:${size}px;line-height:${size}px;">${count}</div>`,
+      className: "map-cluster-icon",
+      iconSize: [size, size],
+    });
+  }
   function renderPinsMode(runs) {
     // Pins mode represents LOCATIONS, not individual activities (memo
-    // section 3.2): one marker per location group, tooltip shows the
-    // run count, and clicking opens the location summary panel rather
-    // than a single-run popup.
+    // section 3.2): one marker per location group, badge shows the run
+    // count, and clicking opens the location summary panel rather than
+    // a single-run popup.
     currentGroups.forEach(g => {
-      const marker = L.marker([g.lat, g.lon]);
+      const marker = L.marker([g.lat, g.lon], {
+        runCount: g.n,
+        icon: runCountDivIcon(g.n, 34),
+      });
       marker.bindTooltip(`${g.isUnknown ? "Unknown location" : g.city} · ${g.n} run${g.n === 1 ? "" : "s"}`, { direction: "top" });
-      marker.on("click", () => selectLocation(g));
+      marker.on("click", e => { stopMarkerClickPropagation(e); selectLocation(g); });
       markerLayer.addLayer(marker);
     });
     leafletMap.addLayer(markerLayer);
@@ -543,19 +713,28 @@
 
     currentGroups = buildLocationGroups(runs);
     renderSummaryCards(computeSummaryCards(runs, currentGroups, getSelectedYears()));
-    renderRecentLocations(currentGroups);
+    renderTopCountries(currentGroups);
     renderTopCities(currentGroups);
 
     if (!leafletMap) {
       leafletMap = L.map("mapContainer", { scrollWheelZoom: true, worldCopyJump: true });
-      markerLayer = L.markerClusterGroup();
+      tileLayer = L.tileLayer(TILE_URL, { maxZoom: 20, attribution: TILE_ATTRIBUTION }).addTo(leafletMap);
+      markerLayer = L.markerClusterGroup({
+        iconCreateFunction: cluster => {
+          const total = cluster.getAllChildMarkers().reduce((sum, m) => sum + (m.options.runCount || 0), 0);
+          const size = total >= 100 ? 48 : total >= 20 ? 42 : 36;
+          return runCountDivIcon(total, size);
+        }
+      });
       routeLayer = L.layerGroup();
       leafletMap.on("zoomend moveend", refreshRoutesForCurrentView);
+      leafletMap.on("click", handleMapBackgroundClick);
+      wireActivityPanelSwipeOnce();
     }
-    ensureTileLayer();
 
     clearModeLayers();
     updateRouteHint(false);
+    updateHeatLegendVisibility(false);
 
     if (runs.length === 0) {
       leafletMap.setView([20, 0], 2);
@@ -563,9 +742,8 @@
       return;
     }
 
-    if (mapMode === "heat") renderHeatMode(runs);
-    else if (mapMode === "pins") renderPinsMode(runs);
-    else if (mapMode === "routes") renderRoutesMode(runs);
+    if (mapMode === "pins") renderPinsMode(runs);
+    else renderRoutesMode(runs);
 
     const bounds = L.latLngBounds(runs.map(r => [r.lat, r.lon]));
     leafletMap.fitBounds(bounds, { padding: [24, 24], maxZoom: mapMode === "pins" ? 14 : 9 });

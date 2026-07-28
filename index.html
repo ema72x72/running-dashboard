@@ -301,14 +301,13 @@
       </div>
       <div class="maptoolbar-right">
         <div class="mapmode" aria-label="Map display mode">
-          <button class="mapmodebtn active" id="mapHeatBtn" type="button">Heatmap</button>
           <button class="mapmodebtn" id="mapPinsBtn" type="button">Pins</button>
-          <button class="mapmodebtn" id="mapRoutesBtn" type="button">Routes</button>
+          <button class="mapmodebtn active" id="mapRoutesBtn" type="button">Routes</button>
         </div>
         <button class="mapfullscreenbtn" id="mapFullscreenBtn" type="button" aria-label="Toggle fullscreen map">⛶</button>
       </div>
     </div>
-    <div class="maplegend" id="mapHeatLegend" style="margin-bottom:8px;">
+    <div class="maplegend" id="mapHeatLegend" style="margin-bottom:8px; display:none;">
       <span>Fewer runs</span><span class="heatbar"></span><span>More runs</span>
     </div>
     <p class="note map-route-hint" id="mapRouteHint" style="display:none;">Zoom in to see individual routes</p>
@@ -325,9 +324,9 @@
 
     <div class="map-lists">
       <div class="map-list-panel">
-        <p class="map-list-title">Recent locations</p>
-        <p class="map-list-subtitle">Places where you've run recently</p>
-        <div id="mapRecentList"></div>
+        <p class="map-list-title">Top countries by distance</p>
+        <p class="map-list-subtitle">Total distance in the selected period</p>
+        <div id="mapTopCountriesList"></div>
       </div>
       <div class="map-list-panel">
         <p class="map-list-title">Top cities by distance</p>

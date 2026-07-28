@@ -13,6 +13,8 @@
   let currentRunsRef = [];
   let currentIndexRef = -1;
   let swipeWired = false;
+  let pickerRuns = [];
+  let pickerWired = false;
 
   function runTimestamp(run) {
     const value = run.start_local || `${run.d}T12:00:00`;
@@ -28,9 +30,14 @@
     if (run.id !== null && run.id !== undefined && String(run.id).trim()) return `data/tracks/${String(run.id).trim()}.json`;
     return null;
   }
-  function runLabel(run) {
+  function cityKey(run) { return (run.location_city || "").trim().toLowerCase(); }
+  function pickerRowLabel(run) {
+    const location = [run.location_city, run.location_country].filter(Boolean).join(", ") || "Location unavailable";
     const distance = Number(run.km || 0).toLocaleString("en-IT",{maximumFractionDigits:2});
-    return `${run.d} · ${distance} km · ${run.name || "Run"}`;
+    return { date: run.d, distance: `${distance} km`, location, name: run.name || "Run" };
+  }
+  function pickerSearchText(run) {
+    return [run.d, run.location_city, run.location_state, run.location_country, run.name].filter(Boolean).join(" ").toLowerCase();
   }
   async function loadRunTrack(run) {
     const path=trackPath(run);
@@ -117,7 +124,8 @@
         <div class="run-panel"><div class="run-panel-inner"><p class="run-panel-title">Performance over time</p><div class="chartwrap" style="height:270px;margin:0"><canvas id="runPerformanceChart"></canvas></div></div></div>
         <div class="run-panel"><div class="run-panel-inner"><p class="run-panel-title">Splits</p><div id="runSplits"></div></div></div>
       </div>
-      <div class="run-panel run-insights"><p class="run-panel-title">Insights</p><ul id="runInsights"></ul><button class="compare-btn" id="compareSimilarBtn">⇄ Compare with a similar run</button><div class="compare-result" id="compareResult"></div></div>`;
+      <div class="run-panel run-insights"><p class="run-panel-title">Insights</p><ul id="runInsights"></ul><button class="run-insights-more" id="runInsightsMoreBtn" type="button" style="display:none">View more insights →</button></div>
+      <div class="run-panel run-compare"><p class="run-panel-title">Compare</p><div class="compare-options" id="compareOptions"></div><div class="compare-result" id="compareResult"></div></div>`;
   }
   function runDetailCell(label,value) { return `<div class="run-detail-item"><span>${label}</span><strong>${value}</strong></div>`; }
   function escapeHtml(value) { return String(value ?? "").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c])); }
@@ -393,15 +401,87 @@
       return `<tr><td>${trophy}${s.km}</td><td class="${paceClass}">${s.pace?fmtPace(s.pace):"—"}</td><td class="${isMaxHr?"split-hr-max":""}">${s.hr?Math.round(s.hr):"—"}</td><td class="${isMaxElev?"split-elev-max":""}">${s.elev===null?"—":`${s.elev>0?"+":""}${Math.round(s.elev)} m`}</td></tr>`;
     }).join("")}</tbody></table>`;
   }
+  // Ranks the current run against every other run within a distance band
+  // (±10%, floor 0.3 km) so both the insight engine and the compare panel
+  // can answer "how does this stack up against similar-distance runs".
+  function distanceBucket(runs, targetKm, tolerancePct=0.1) {
+    const tolerance = Math.max(targetKm*tolerancePct, 0.3);
+    return runs.filter(r => r.km>0 && Math.abs(r.km-targetKm)<=tolerance);
+  }
+  function computeInsightCandidates(run, track) {
+    const insights=[];
+    const allRuns=getRuns();
+    const pace=paceSecondsFromRun(run);
+
+    // Fastest run in this city this year (needs at least one other same-city,
+    // same-year run to be a meaningful claim).
+    if (run.location_city) {
+      const cityYearRuns=allRuns.filter(r=>r.y===run.y&&cityKey(r)===cityKey(run)&&r.km>0&&r.min>0);
+      if (cityYearRuns.length>=2) {
+        const ranked=cityYearRuns.map(r=>({r,p:paceSecondsFromRun(r)})).filter(x=>Number.isFinite(x.p));
+        const fastest=ranked.reduce((best,x)=>!best||x.p<best.p?x:best,null);
+        if (fastest && fastest.r===run) insights.push(`Fastest run in ${run.location_city} this year.`);
+      }
+    }
+
+    // Longest run this calendar month (across all locations).
+    if (run.d) {
+      const monthKey=run.d.slice(0,7);
+      const monthRuns=allRuns.filter(r=>r.d && r.d.slice(0,7)===monthKey && r.km>0);
+      if (monthRuns.length>=2) {
+        const longest=monthRuns.reduce((best,r)=>!best||r.km>best.km?r:best,null);
+        if (longest===run) insights.push("Longest run this month.");
+      }
+    }
+
+    // Rank over similar distance: only worth mentioning if this run is the
+    // best or second-best in its distance band, out of at least 3 runs.
+    if (run.km>0 && pace) {
+      const bucket=distanceBucket(allRuns, run.km);
+      if (bucket.length>=3) {
+        const ranked=bucket.map(r=>({r,p:paceSecondsFromRun(r)})).filter(x=>Number.isFinite(x.p)).sort((a,b)=>a.p-b.p);
+        const rank=ranked.findIndex(x=>x.r===run);
+        if (rank===0) insights.push(`Fastest run around ${run.km.toFixed(1)} km on record.`);
+        else if (rank===1) insights.push(`Second-fastest run around ${run.km.toFixed(1)} km.`);
+      }
+    }
+
+    const splits=buildSplits(track);
+    if (splits.length>=4) {
+      const half=Math.floor(splits.length/2), first=splits.slice(0,half).map(s=>s.pace).filter(Boolean), second=splits.slice(half).map(s=>s.pace).filter(Boolean);
+      if (first.length&&second.length&&second.reduce((a,b)=>a+b,0)/second.length < first.reduce((a,b)=>a+b,0)/first.length) insights.push("Negative split: the second half was faster.");
+    }
+
+    const yearRuns=allRuns.filter(r=>r.y===run.y&&r.hr&&r.km>0);
+    const efficiency=run.hr?run.km*1000/(run.hr*run.min):null;
+    const avgEfficiency=yearRuns.length?yearRuns.reduce((sum,r)=>sum+r.km*1000/(r.hr*r.min),0)/yearRuns.length:null;
+    if (efficiency&&avgEfficiency&&efficiency>avgEfficiency*1.05) insights.push("Cardiac efficiency was above your yearly average.");
+
+    const yearlyPace=yearRuns.length?yearRuns.reduce((s,r)=>s+r.min,0)*60/yearRuns.reduce((s,r)=>s+r.km,0):null;
+    if (pace&&yearlyPace&&pace<yearlyPace) insights.push("Faster than your average pace for this year.");
+
+    if (run.km>=15) insights.push("This run qualifies as a long run.");
+
+    return insights;
+  }
   function renderRunInsights(run,track) {
-    const target=document.getElementById("runInsights"); if(!target) return; const insights=[];
-    const splits=buildSplits(track); if(splits.length>=4){ const half=Math.floor(splits.length/2), first=splits.slice(0,half).map(s=>s.pace).filter(Boolean), second=splits.slice(half).map(s=>s.pace).filter(Boolean); if(first.length&&second.length&&second.reduce((a,b)=>a+b,0)/second.length < first.reduce((a,b)=>a+b,0)/first.length) insights.push("Negative split: the second half was faster."); }
-    const yearRuns=getRuns().filter(r=>r.y===run.y&&r.hr&&r.km>0); const efficiency=run.hr?run.km*1000/(run.hr*run.min):null; const avgEfficiency=yearRuns.length?yearRuns.reduce((sum,r)=>sum+r.km*1000/(r.hr*r.min),0)/yearRuns.length:null;
-    if(efficiency&&avgEfficiency&&efficiency>avgEfficiency*1.05) insights.push("Cardiac efficiency was above your yearly average.");
-    const yearlyPace=yearRuns.length?yearRuns.reduce((s,r)=>s+r.min,0)*60/yearRuns.reduce((s,r)=>s+r.km,0):null; const pace=paceSecondsFromRun(run); if(pace&&yearlyPace&&pace<yearlyPace) insights.push("Faster than your average pace for this year.");
-    if(run.km>=15) insights.push("This run qualifies as a long run.");
-    if(!insights.length) insights.push("Detailed insights will improve as more historical tracks are downloaded.");
-    target.innerHTML=insights.map(x=>`<li>${escapeHtml(x)}</li>`).join("");
+    const target=document.getElementById("runInsights"); if(!target) return;
+    const moreBtn=document.getElementById("runInsightsMoreBtn");
+    let insights=computeInsightCandidates(run,track);
+    if (!insights.length) insights=["Detailed insights will improve as more historical tracks are downloaded."];
+    const VISIBLE=4;
+    target.innerHTML=insights.map((x,i)=>`<li class="${i>=VISIBLE?"run-insight-extra":""}"${i>=VISIBLE?' style="display:none"':""}>${escapeHtml(x)}</li>`).join("");
+    if (moreBtn) {
+      const hiddenCount=Math.max(0, insights.length-VISIBLE);
+      moreBtn.style.display=hiddenCount?"":"none";
+      moreBtn.textContent="View more insights →";
+      moreBtn.onclick=()=>{
+        const extras=target.querySelectorAll(".run-insight-extra");
+        const showing=extras.length>0 && extras[0].style.display!=="none";
+        extras.forEach(li=>{ li.style.display=showing?"none":"list-item"; });
+        moreBtn.textContent=showing?"View more insights →":"Show fewer insights ↑";
+      };
+    }
   }
   function bindRunControls(run,index,runs,track) {
     const prev=document.getElementById("previousRunBtn"), next=document.getElementById("nextRunBtn");
@@ -416,7 +496,6 @@
       renderRunChart(track,ctx);
       renderMapLegend(ctx);
     });
-    const compare=document.getElementById("compareSimilarBtn"); if(compare) compare.onclick=()=>compareSimilarRun(run,runs);
   }
   function runKey(run) { return run?.id || `${run?.d}-${run?.km}-${run?.min}`; }
   function selectRun(key) { selectedRunId=String(key); dirty.runs=true; renderRuns(); }
@@ -429,10 +508,84 @@
     const match = runs.find(r => String(r.id) === String(id)) || runs.find(r => String(runKey(r)) === String(id));
     if (match) selectRun(runKey(match));
   }
-  function compareSimilarRun(run,runs) {
-    const candidates=runs.filter(r=>runKey(r)!==runKey(run)); const target=document.getElementById("compareResult"); if(!target||!candidates.length)return;
-    const similar=candidates.slice().sort((a,b)=>Math.abs(a.km-run.km)-Math.abs(b.km-run.km))[0]; const paceA=paceSecondsFromRun(run), paceB=paceSecondsFromRun(similar);
-    target.style.display="block"; target.innerHTML=`Closest-distance run: <strong>${escapeHtml(similar.d)}</strong> · ${detailValue(similar.km," km",2)} · ${paceB?fmtPace(paceB):"—"}/km. ${paceA&&paceB?(paceA<paceB?"The selected run was faster.":"The comparison run was faster."):""}`;
+  // Compare panel: instead of one generic "similar run" button, offer up to
+  // four targeted comparisons (memo section 12). "Same route" uses a light
+  // heuristic (same city + distance within ±10% + elevation gain within
+  // ±20% when both are known) rather than actual GPS shape-matching, which
+  // would need fetching and comparing every candidate's track.
+  function findPreviousCityRun(run, runs) {
+    if (!run.location_city) return null;
+    const ts=runTimestamp(run);
+    const candidates=runs.filter(r=>r!==run && cityKey(r)===cityKey(run) && runTimestamp(r)<ts);
+    if (!candidates.length) return null;
+    return candidates.reduce((best,r)=>!best||runTimestamp(r)>runTimestamp(best)?r:best,null);
+  }
+  function findFastestSameDistance(run, runs) {
+    const bucket=distanceBucket(runs, run.km).filter(r=>r!==run && r.min>0);
+    const ranked=bucket.map(r=>({r,p:paceSecondsFromRun(r)})).filter(x=>Number.isFinite(x.p)).sort((a,b)=>a.p-b.p);
+    return ranked.length ? ranked[0].r : null;
+  }
+  function findSameRouteCandidate(run, runs) {
+    if (!run.location_city || !(run.km>0)) return null;
+    const ts=runTimestamp(run);
+    const kmTolerance=Math.max(run.km*0.1, 0.3);
+    const elevTolerance=Number.isFinite(run.elev) ? Math.max(run.elev*0.2, 10) : null;
+    const candidates=runs.filter(r=>{
+      if (r===run || cityKey(r)!==cityKey(run)) return false;
+      if (runTimestamp(r)>=ts) return false; // "previous attempt": strictly earlier
+      if (Math.abs(r.km-run.km)>kmTolerance) return false;
+      if (elevTolerance!==null && Number.isFinite(r.elev) && Math.abs(r.elev-run.elev)>elevTolerance) return false;
+      return true;
+    });
+    if (!candidates.length) return null;
+    return candidates.reduce((best,r)=>!best||runTimestamp(r)>runTimestamp(best)?r:best,null);
+  }
+  function findSimilarEffortCandidate(run, runs) {
+    const pace=paceSecondsFromRun(run); if (!pace || !run.hr) return null;
+    const candidates=runs.filter(r=>r!==run && r.hr && r.km>0 && r.min>0);
+    let best=null, bestScore=Infinity;
+    candidates.forEach(r=>{
+      const p=paceSecondsFromRun(r); if (!Number.isFinite(p)) return;
+      // Weighted so ~30s/km of pace difference counts about the same as
+      // ~10bpm of HR difference; a heuristic, not a physiological model.
+      const score=Math.abs(p-pace)/30 + Math.abs(r.hr-run.hr)/10;
+      if (score<bestScore) { bestScore=score; best=r; }
+    });
+    return best;
+  }
+  function compareOptionDefs(run, runs) {
+    const defs=[];
+    const cityRun=findPreviousCityRun(run, runs);
+    if (cityRun) defs.push({kind:"city", icon:"🏙️", label:`vs previous run in ${run.location_city}`, candidate:cityRun});
+    const distanceRun=findFastestSameDistance(run, runs);
+    if (distanceRun) defs.push({kind:"distance", icon:"⚡", label:`vs fastest ${run.km.toFixed(1)} km run`, candidate:distanceRun});
+    const routeRun=findSameRouteCandidate(run, runs);
+    if (routeRun) defs.push({kind:"route", icon:"🔁", label:"vs previous attempt on this route", candidate:routeRun});
+    const effortRun=findSimilarEffortCandidate(run, runs);
+    if (effortRun) defs.push({kind:"effort", icon:"❤️", label:"vs similar effort (pace & HR)", candidate:effortRun});
+    return defs;
+  }
+  function showCompareResult(run, candidate, label) {
+    const target=document.getElementById("compareResult"); if (!target) return;
+    const paceA=paceSecondsFromRun(run), paceB=paceSecondsFromRun(candidate);
+    const fasterText=(paceA&&paceB) ? (paceA<paceB ? "This run was faster." : (paceA>paceB ? "The comparison run was faster." : "Same pace.")) : "";
+    target.style.display="block";
+    target.innerHTML=`<strong>${escapeHtml(label)}</strong><br>${escapeHtml(candidate.d)} · ${escapeHtml(runHeaderTitle(candidate))} · ${detailValue(candidate.km," km",2)} · ${paceB?fmtPace(paceB):"—"}/km${candidate.hr?` · ${Math.round(candidate.hr)} bpm`:""}. ${fasterText}`;
+  }
+  function renderCompareOptions(run, runs) {
+    const target=document.getElementById("compareOptions"); if (!target) return;
+    const resultTarget=document.getElementById("compareResult"); if (resultTarget) resultTarget.style.display="none";
+    const defs=compareOptionDefs(run, runs);
+    if (!defs.length) { target.innerHTML='<p class="empty">Not enough historical data yet for a comparison.</p>'; return; }
+    target.innerHTML=defs.map(d=>`<button class="compare-option" data-kind="${d.kind}" type="button"><span class="compare-option-icon">${d.icon}</span><span class="compare-option-label">${escapeHtml(d.label)}</span><span class="compare-option-chevron">›</span></button>`).join("");
+    target.querySelectorAll(".compare-option").forEach(btn=>{
+      btn.onclick=()=>{
+        target.querySelectorAll(".compare-option").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        const def=defs.find(d=>d.kind===btn.dataset.kind);
+        if (def) showCompareResult(run, def.candidate, def.label);
+      };
+    });
   }
   // Wired once on the persistent #runDetailContent node (its children are
   // replaced on every render, but the node itself survives), mirroring the
@@ -469,6 +622,7 @@
 
     // Navigation must work even if the track request or a renderer fails.
     bindRunControls(run,index,runs,null);
+    try { renderCompareOptions(run,runs); } catch (error) { console.error("Compare panel failed", error); }
 
     let track = null;
     try {
@@ -497,13 +651,75 @@
     // Rebind metric controls with the loaded track.
     bindRunControls(run,index,runs,track);
   }
+  // Custom activity picker: a searchable panel instead of a native <select>,
+  // which still scales to hundreds of runs (memo section 4) but shows
+  // richer per-row info (date, distance, location, name). The trigger and
+  // panel nodes live directly in index.html (not rebuilt per render), so
+  // they're wired up once; only the row list and trigger text refresh on
+  // every render.
+  function renderPickerRows(filterText) {
+    const list=document.getElementById("runPickerList"); if (!list) return;
+    const needle=(filterText||"").trim().toLowerCase();
+    const rows=needle ? pickerRuns.filter(r=>pickerSearchText(r).includes(needle)) : pickerRuns;
+    if (!rows.length) { list.innerHTML='<p class="empty" style="padding:14px">No runs match your search.</p>'; return; }
+    list.innerHTML=rows.map(r=>{
+      const label=pickerRowLabel(r);
+      const active=String(runKey(r))===String(selectedRunId) ? " active" : "";
+      return `<button type="button" class="run-picker-row${active}" data-key="${escapeHtml(runKey(r))}">
+        <span class="run-picker-row-date">${escapeHtml(label.date)}</span>
+        <span class="run-picker-row-main"><span class="run-picker-row-name">${escapeHtml(label.name)}</span><span class="run-picker-row-loc">${escapeHtml(label.location)}</span></span>
+        <span class="run-picker-row-km">${escapeHtml(label.distance)}</span>
+      </button>`;
+    }).join("");
+    list.querySelectorAll(".run-picker-row").forEach(btn=>{ btn.onclick=()=>{ closeRunPicker(); selectRun(btn.dataset.key); }; });
+  }
+  function updateRunPickerTrigger(run) {
+    const text=document.getElementById("runPickerTriggerText"); if (!text || !run) return;
+    const label=pickerRowLabel(run);
+    text.textContent=`${label.date} · ${label.distance} · ${label.name}`;
+  }
+  function openRunPicker() {
+    const panel=document.getElementById("runPickerPanel"), trigger=document.getElementById("runPickerTrigger"), search=document.getElementById("runPickerSearch");
+    if (!panel) return;
+    panel.hidden=false;
+    if (trigger) trigger.setAttribute("aria-expanded","true");
+    if (search) { search.value=""; if (search.focus) search.focus(); }
+    renderPickerRows("");
+  }
+  function closeRunPicker() {
+    const panel=document.getElementById("runPickerPanel"), trigger=document.getElementById("runPickerTrigger");
+    if (!panel) return;
+    panel.hidden=true;
+    if (trigger) trigger.setAttribute("aria-expanded","false");
+  }
+  function wireRunPickerOnce() {
+    if (pickerWired) return;
+    const trigger=document.getElementById("runPickerTrigger"), panel=document.getElementById("runPickerPanel"), search=document.getElementById("runPickerSearch");
+    if (!trigger || !panel) return;
+    pickerWired=true;
+    trigger.onclick=()=>{ panel.hidden ? openRunPicker() : closeRunPicker(); };
+    if (search && search.addEventListener) search.addEventListener("input", ()=>renderPickerRows(search.value));
+    if (document.addEventListener) {
+      document.addEventListener("click", e=>{
+        if (panel.hidden) return;
+        const target=e && e.target;
+        if (target && typeof panel.contains==="function" && panel.contains(target)) return;
+        if (target && (target===trigger || (typeof trigger.contains==="function" && trigger.contains(target)))) return;
+        closeRunPicker();
+      });
+      document.addEventListener("keydown", e=>{ if (e && e.key==="Escape" && !panel.hidden) closeRunPicker(); });
+    }
+  }
   function renderRuns() {
-    const runs=sortedSelectableRuns(), selector=document.getElementById("runSelector"), content=document.getElementById("runDetailContent");
-    if(!runs.length){ selector.innerHTML=""; content.innerHTML='<p class="run-empty">No runs match the selected years.</p>'; return; }
+    const runs=sortedSelectableRuns(), content=document.getElementById("runDetailContent");
+    if(!runs.length){ pickerRuns=[]; content.innerHTML='<p class="run-empty">No runs match the selected years.</p>'; return; }
     if(!selectedRunId || !runs.some(r=>String(runKey(r))===String(selectedRunId))) selectedRunId=String(runKey(runs[0]));
-    selector.innerHTML=runs.map(r=>`<option value="${escapeHtml(runKey(r))}" ${String(runKey(r))===String(selectedRunId)?"selected":""}>${escapeHtml(runLabel(r))}</option>`).join("");
-    selector.onchange=()=>selectRun(selector.value);
-    const run=runs.find(r=>String(runKey(r))===String(selectedRunId))||runs[0]; renderSelectedRun(run,runs);
+    pickerRuns=runs;
+    wireRunPickerOnce();
+    closeRunPicker();
+    const run=runs.find(r=>String(runKey(r))===String(selectedRunId))||runs[0];
+    updateRunPickerTrigger(run);
+    renderSelectedRun(run,runs);
   }
 
   window.RD.tabs = window.RD.tabs || {};

@@ -93,7 +93,14 @@
 
   <section class="tabpanel" id="tab-runs">
     <div class="run-browser">
-      <select class="run-search" id="runSelector" aria-label="Select a historical run"></select>
+      <button type="button" class="run-picker-trigger" id="runPickerTrigger" aria-haspopup="listbox" aria-expanded="false">
+        <span class="run-picker-trigger-text" id="runPickerTriggerText">Select a run</span>
+        <span class="run-picker-chevron">⌄</span>
+      </button>
+      <div class="run-picker-panel" id="runPickerPanel" hidden>
+        <input type="text" class="run-picker-search" id="runPickerSearch" placeholder="Search by date, place or name…" aria-label="Search runs">
+        <div class="run-picker-list" id="runPickerList" role="listbox"></div>
+      </div>
     </div>
     <div id="runDetailContent"><p class="run-empty">Loading run details…</p></div>
   </section>

@@ -242,16 +242,29 @@
 
   <section class="tabpanel" id="tab-efficienza">
     <div class="kpigrid" id="efficiencyKpiGrid"></div>
-    <p class="kpifoot">Efficiency is measured in metres travelled per heartbeat: higher values indicate more distance covered for the same cardiac effort. Only runs with valid heart-rate data are included.</p>
 
-    <p class="chartlabel">Average efficiency by year (metres per heartbeat)</p>
+    <div class="chartlabel-row">
+      <p class="chartlabel">Yearly efficiency trend (metres per heartbeat)</p>
+      <button class="info-icon-btn" data-info="yearlyChart" type="button" aria-label="About this chart">i</button>
+    </div>
     <div class="chartwrap" style="height:250px;"><canvas id="chartEfficiencyYear" role="img" aria-label="Average cardiac efficiency by year"></canvas></div>
 
-    <p class="chartlabel">Scatter plot: pace and average heart rate</p>
-    <p class="note">Each point represents a run. Higher and further left means a faster pace at a lower heart rate.</p>
+    <div class="chartlabel-row">
+      <p class="chartlabel">Pace vs average heart rate</p>
+      <button class="info-icon-btn" data-info="scatterChart" type="button" aria-label="About this chart">i</button>
+    </div>
+    <p class="note">Each point represents a run.</p>
     <div class="legend" id="efficiencyLegend"></div>
     <div class="chartwrap" style="height:340px;"><canvas id="chartEfficiencyScatter" role="img" aria-label="Scatter plot of pace and heart rate"></canvas></div>
   </section>
+
+  <div class="info-modal-overlay" id="efficiencyInfoModal">
+    <div class="info-modal-card">
+      <p class="info-modal-title" id="efficiencyInfoModalTitle"></p>
+      <p class="info-modal-body" id="efficiencyInfoModalBody"></p>
+      <button class="info-modal-close" id="efficiencyInfoModalClose" type="button">Close</button>
+    </div>
+  </div>
 
   <section class="tabpanel" id="tab-settimana">
     <p class="chartlabel">Metric</p>

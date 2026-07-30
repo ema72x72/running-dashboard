@@ -487,6 +487,14 @@
     "source": "nominatim",
     "state": "Sardinia"
   },
+  "39.460,-0.404": {
+    "country": "Spain",
+    "country_code": "es",
+    "display_name": "Valencia, Comarca de València, Valencia, Valencian Community, Spain",
+    "place": "Valencia",
+    "source": "nominatim",
+    "state": "Valencian Community"
+  },
   "40.355,18.173": {
     "country": "Italy",
     "country_code": "it",

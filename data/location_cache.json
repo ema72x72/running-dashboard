@@ -687,6 +687,14 @@
     "source": "nominatim",
     "state": null
   },
+  "43.283,-2.168": {
+    "country": "Spain",
+    "country_code": "es",
+    "display_name": "Zarautz, Gipuzkoa, Autonomous Community of the Basque Country, 20800, Spain",
+    "place": "Zarautz",
+    "source": "nominatim",
+    "state": "Autonomous Community of the Basque Country"
+  },
   "43.327,16.448": {
     "country": "Croatia",
     "country_code": "hr",

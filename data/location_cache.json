@@ -719,6 +719,14 @@
     "source": "nominatim",
     "state": null
   },
+  "43.463,-3.723": {
+    "country": "Spain",
+    "country_code": "es",
+    "display_name": "Ribamontán al Mar, Cantabria, Spain",
+    "place": "Ribamontán al Mar",
+    "source": "nominatim",
+    "state": "Cantabria"
+  },
   "43.509,5.793": {
     "country": "France",
     "country_code": "fr",

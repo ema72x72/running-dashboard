@@ -711,6 +711,14 @@
     "source": "nominatim",
     "state": null
   },
+  "43.388,-4.284": {
+    "country": "Spain",
+    "country_code": "es",
+    "display_name": "Comillas, Cantabria, Spain",
+    "place": "Comillas",
+    "source": "nominatim",
+    "state": "Cantabria"
+  },
   "43.452,16.144": {
     "country": "Croatia",
     "country_code": "hr",

@@ -735,6 +735,14 @@
     "source": "nominatim",
     "state": "Cantabria"
   },
+  "43.499,-5.263": {
+    "country": "Spain",
+    "country_code": "es",
+    "display_name": "Colunga, Asturias, Spain",
+    "place": "Colunga",
+    "source": "nominatim",
+    "state": "Asturias"
+  },
   "43.509,5.793": {
     "country": "France",
     "country_code": "fr",

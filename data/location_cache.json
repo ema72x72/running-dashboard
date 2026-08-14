@@ -391,6 +391,14 @@
     "source": "nominatim",
     "state": "Sicily"
   },
+  "37.262,13.588": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Agrigento, Sicily, 92100, Italy",
+    "place": "Agrigento",
+    "source": "nominatim",
+    "state": "Sicily"
+  },
   "37.267,13.608": {
     "country": "Italy",
     "country_code": "it",

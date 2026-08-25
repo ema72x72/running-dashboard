@@ -14,7 +14,16 @@
 
   const YEAR_COLORS = {2014:"#94a3b8",2015:"#60a5fa",2016:"#34d399",2017:"#a78bfa",2018:"#fb923c",2019:"#f87171",2020:"#fbbf24",2021:"#38bdf8",2022:"#4ade80",2023:"#f472b6",2024:"#c084fc",2025:"#2a78d6",2026:"#e34948",2027:"#0f6e56",2028:"#993556"};
   const WD_LABELS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-  const HRZ_LABELS = ["Easy <130","Moderate 130-145","Steady 145-160","Hard 160-175","Maximum 175+"];
+  // Boundaries match the athlete's actual current Strava HR zone config
+  // (checked via the Strava zones endpoint on 2026-08-25: 0-108 / 109-134 /
+  // 135-148 / 149-161 / 162+, source "MaxHeartRateFromAge"), which is what
+  // the per-run `hrz` seconds-per-zone breakdown below is actually bucketed
+  // against. The old hardcoded ranges here (Easy <130 / Moderate 130-145 /
+  // Steady 145-160 / Hard 160-175 / Maximum 175+) didn't match Strava's own
+  // zones at all and overstated the athlete's real max HR (~165bpm,
+  // confirmed 2026-08-24) - Strava's Z5 cutoff of 162 is much closer to
+  // that reality than the old "175+" label ever was.
+  const HRZ_LABELS = ["Easy <109","Moderate 109-134","Steady 135-148","Hard 149-161","Maximum 162+"];
   const HRZ_COLORS = ["#60a5fa","#34d399","#fbbf24","#fb923c","#e34948"];
 
   const darkMediaQuery = matchMedia("(prefers-color-scheme: dark)");

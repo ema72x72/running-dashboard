@@ -91,6 +91,7 @@
   document.getElementById("mapRoutesBtn")?.addEventListener("click", () => setMapMode("routes"));
   document.getElementById("mapSidePanelClose")?.addEventListener("click", closeLocationPanel);
   document.addEventListener("keydown", e => { if (e.key === "Escape") closeLocationPanel(); });
+  wireMapListModalOnce();
 
   /* ---------- Fullscreen ---------- */
   function isFullscreen() { return !!document.fullscreenElement; }
@@ -255,7 +256,7 @@
       }
     });
 
-    return { countries, cities, newPlaces, newCountriesCount, favouriteCity, favouriteSharePct, mostTravelledYear, referenceYear };
+    return { countries, cities, newPlaces, newCountriesCount, favouriteCity, favouriteSharePct, mostTravelledYear, referenceYear, byYear };
   }
 
   function renderSummaryCards(stats) {
@@ -263,41 +264,171 @@
     if (!el) return;
     const cards = [
       {
-        icon: "🌐", color: "purple", label: "Countries", value: stats.countries,
+        key: "countries", icon: "🌐", color: "purple", label: "Countries", value: stats.countries,
         sub: stats.newCountriesCount > 0 ? `+${stats.newCountriesCount} this year` : "",
-        subAccent: "green",
+        subAccent: "green", clickable: true,
       },
       {
-        icon: "🏙", color: "blue", label: "Cities", value: stats.cities,
+        key: "cities", icon: "🏙", color: "blue", label: "Cities", value: stats.cities,
         sub: stats.newPlaces.length > 0 ? `+${stats.newPlaces.length} this year` : "",
-        subAccent: "green",
+        subAccent: "green", clickable: true,
       },
       {
-        icon: "📍", color: "green", label: "New places", value: stats.newPlaces.length,
+        key: "newPlaces", icon: "📍", color: "green", label: "New places", value: stats.newPlaces.length,
         sub: stats.referenceYear
           ? (stats.newPlaces.length ? `${stats.referenceYear} · ${stats.newPlaces.slice(0, 3).map(g => g.city).join(", ")}` : String(stats.referenceYear))
           : "",
+        clickable: true,
       },
       {
-        icon: "⭐", color: "orange", label: "Favourite city", labelAccent: "orange", value: stats.favouriteCity ? stats.favouriteCity.city : "—",
+        key: "favourite", icon: "⭐", color: "orange", label: "Favourite city", labelAccent: "orange", value: stats.favouriteCity ? stats.favouriteCity.city : "—",
         sub: stats.favouriteCity
           ? `${stats.favouriteCity.n} runs · ${fmtKm(stats.favouriteCity.km)} km`
             + (Number.isFinite(stats.favouriteSharePct) ? ` · ${Math.round(stats.favouriteSharePct)}% of total distance` : "")
           : "",
       },
       {
-        icon: "✈", color: "purple", label: "Most travelled year", value: stats.mostTravelledYear ? stats.mostTravelledYear.year : "—",
+        key: "mostTravelledYear", icon: "✈", color: "purple", label: "Most travelled year", value: stats.mostTravelledYear ? stats.mostTravelledYear.year : "—",
         sub: stats.mostTravelledYear ? `${stats.mostTravelledYear.countries.size} countries · ${stats.mostTravelledYear.cities.size} cities` : "",
+        clickable: true,
       },
     ];
     el.innerHTML = cards.map(c => `
-      <div class="map-stat-card">
+      <div class="map-stat-card${c.clickable ? " map-stat-card--clickable" : ""}" data-card="${c.key}">
         <div class="map-stat-icon map-stat-icon-${c.color}">${c.icon}</div>
         <p class="map-stat-value">${escapeHtml(c.value)}</p>
         <p class="map-stat-label${c.labelAccent ? ` map-stat-accent-${c.labelAccent}` : ""}">${c.label}</p>
         <p class="map-stat-sub${c.subAccent ? ` map-stat-accent-${c.subAccent}` : ""}">${escapeHtml(c.sub || "")}</p>
       </div>
     `).join("");
+    el.querySelectorAll(".map-stat-card--clickable").forEach(card => {
+      card.onclick = () => openSummaryCardModal(card.dataset.card, stats);
+    });
+  }
+
+  /* ---------- Summary-card popups (Countries / Cities / New places /
+     Most travelled year): clicking a card lists the items behind it,
+     with items belonging to the most recently selected year shown in a
+     distinct colour and pinned to the top of the list. ---------- */
+  function escapeAttr(value) { return escapeHtml(value); }
+  function mapListRowHtml(row) {
+    return `
+      <div class="map-list-row${row.highlighted ? " map-list-row-highlight" : ""}">
+        <div class="map-list-row-main">
+          <span class="map-list-row-label">${escapeHtml(row.label)}</span>
+          ${row.sub ? `<span class="map-list-row-sub">${escapeHtml(row.sub)}</span>` : ""}
+        </div>
+        ${row.value ? `<span class="map-list-row-value">${escapeHtml(row.value)}</span>` : ""}
+      </div>
+    `;
+  }
+  function sortRecentFirst(items, isRecent, kmOf) {
+    return items.slice().sort((a, b) => {
+      const aRecent = isRecent(a), bRecent = isRecent(b);
+      if (aRecent !== bRecent) return aRecent ? -1 : 1;
+      return kmOf(b) - kmOf(a);
+    });
+  }
+  function buildCountriesSections(stats) {
+    const countryGroups = buildCountryGroups(currentGroups);
+    const recentCountries = (stats.byYear.get(stats.referenceYear) || {}).countries || new Set();
+    const sorted = sortRecentFirst(countryGroups, c => recentCountries.has(c.country), c => c.km);
+    return [{
+      rows: sorted.map(c => ({
+        label: c.country,
+        sub: `${c.cities.size} cit${c.cities.size === 1 ? "y" : "ies"} · ${c.n} run${c.n === 1 ? "" : "s"}`,
+        value: `${fmtKm(c.km)} km`,
+        highlighted: recentCountries.has(c.country),
+      })),
+    }];
+  }
+  function buildCitiesSections(stats) {
+    const known = currentGroups.filter(g => !g.isUnknown);
+    const recentCities = (stats.byYear.get(stats.referenceYear) || {}).cities || new Set();
+    const sorted = sortRecentFirst(known, g => recentCities.has(g.key), g => g.km);
+    return [{
+      rows: sorted.map(g => ({
+        label: `${g.city}, ${g.country}`,
+        sub: `${g.n} run${g.n === 1 ? "" : "s"}`,
+        value: `${fmtKm(g.km)} km`,
+        highlighted: recentCities.has(g.key),
+      })),
+    }];
+  }
+  function buildNewPlacesSections(stats) {
+    // Every entry here is already, by definition, a place first visited
+    // in the reference year, so all rows share the highlighted colour.
+    const sorted = stats.newPlaces.slice().sort((a, b) => b.km - a.km);
+    return [{
+      rows: sorted.map(g => ({
+        label: `${g.city}, ${g.country}`,
+        sub: `First run: ${fmtDate(new Date(g.firstDate + "T00:00:00"))}`,
+        value: `${fmtKm(g.km)} km`,
+        highlighted: true,
+      })),
+    }];
+  }
+  function buildMostTravelledYearSections(stats) {
+    const my = stats.mostTravelledYear;
+    if (!my) return [{ rows: [] }];
+    const countryNames = [...my.countries].sort((a, b) => a.localeCompare(b));
+    const cityRows = [...my.cities]
+      .map(key => currentGroups.find(g => g.key === key))
+      .filter(Boolean)
+      .sort((a, b) => b.km - a.km);
+    return [
+      {
+        heading: `Countries (${countryNames.length})`,
+        rows: countryNames.map(name => ({ label: name, highlighted: true })),
+      },
+      {
+        heading: `Cities (${cityRows.length})`,
+        rows: cityRows.map(g => ({
+          label: `${g.city}, ${g.country}`,
+          sub: `${g.n} run${g.n === 1 ? "" : "s"}`,
+          value: `${fmtKm(g.km)} km`,
+          highlighted: true,
+        })),
+      },
+    ];
+  }
+  const SUMMARY_CARD_MODALS = {
+    countries: stats => ({ title: "Countries", sections: buildCountriesSections(stats) }),
+    cities: stats => ({ title: "Cities", sections: buildCitiesSections(stats) }),
+    newPlaces: stats => ({ title: "New places", sections: buildNewPlacesSections(stats) }),
+    mostTravelledYear: stats => ({
+      title: stats.mostTravelledYear ? `Most travelled year — ${stats.mostTravelledYear.year}` : "Most travelled year",
+      sections: buildMostTravelledYearSections(stats),
+    }),
+  };
+  function openSummaryCardModal(key, stats) {
+    const builder = SUMMARY_CARD_MODALS[key];
+    if (!builder) return;
+    const { title, sections } = builder(stats);
+    openMapListModal(title, sections);
+  }
+  function openMapListModal(title, sections) {
+    const overlay = document.getElementById("mapListModal");
+    const titleEl = document.getElementById("mapListModalTitle");
+    const bodyEl = document.getElementById("mapListModalBody");
+    if (!overlay || !titleEl || !bodyEl) return;
+    titleEl.textContent = title;
+    bodyEl.innerHTML = sections.map(sec => `
+      ${sec.heading ? `<p class="map-list-modal-heading">${escapeAttr(sec.heading)}</p>` : ""}
+      ${sec.rows.length ? sec.rows.map(mapListRowHtml).join("") : '<p class="empty">No data for this period</p>'}
+    `).join("");
+    overlay.classList.add("open");
+  }
+  function closeMapListModal() {
+    document.getElementById("mapListModal")?.classList.remove("open");
+  }
+  function wireMapListModalOnce() {
+    const overlay = document.getElementById("mapListModal");
+    if (!overlay || overlay.dataset.wired) return;
+    overlay.dataset.wired = "1";
+    overlay.addEventListener("click", e => { if (e.target === overlay) closeMapListModal(); });
+    document.getElementById("mapListModalClose")?.addEventListener("click", closeMapListModal);
+    document.addEventListener("keydown", e => { if (e && e.key === "Escape") closeMapListModal(); });
   }
 
   /* ---------- Top countries by distance (replaces Recent locations) ---------- */

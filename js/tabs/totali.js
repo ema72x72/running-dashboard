@@ -279,7 +279,8 @@
     // "vs best year" card), while the km/week figure is always about
     // catching the best year's eventual FULL total by year-end, which is
     // what "beat your best year" as a season-long goal actually means.
-    const distanceSameDate = bestDaily[Math.min(lastDoy, 366)] - currentKm;
+    const bestKmSameDate = bestDaily[Math.min(lastDoy, 366)];
+    const distanceSameDate = bestKmSameDate - currentKm;
     const distanceToRecord = bestKm - currentKm;
     const daysInYear = isLeapYear(currentYear) ? 366 : 365;
     const remainingWeeks = Math.max(0, daysInYear - lastDoy) / 7;
@@ -315,7 +316,7 @@
 
     legendEl.innerHTML = `
       <div class="season-legend-row"><span class="season-legend-dot" style="background:#34d399"></span>${currentYear}<span class="season-legend-value">${fmtKm(currentKm)} km</span></div>
-      <div class="season-legend-row"><span class="season-legend-dot" style="background:#89877199"></span>Best (${bestYear})<span class="season-legend-value">${fmtKm(bestKm)} km</span></div>
+      <div class="season-legend-row"><span class="season-legend-dot" style="background:#89877199"></span>Best (${bestYear}, same date)<span class="season-legend-value">${fmtKm(bestKmSameDate)} km</span></div>
     `;
 
     const currentPoints = [];

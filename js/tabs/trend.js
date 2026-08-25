@@ -16,7 +16,13 @@
     "3m": { days: 90, label: "3 months", shortLabel: "3M" },
     "1y": { days: 365, label: "1 year", shortLabel: "1Y" }
   };
-  let trendWindowKey = "3m";
+  // Volume panel follows the top-level selector (#trendWindowRow); the
+  // Pace panel has its own independent selector (#trendPaceWindowRow),
+  // since the two charts are often worth reading at different smoothing
+  // horizons (e.g. a long-term volume trend vs a recent pace check).
+  // Both default to 1 year.
+  let volumeWindowKey = "1y";
+  let paceWindowKey = "1y";
 
   /* ---------- Formatting helpers ---------- */
   function formatPaceDifference(seconds) {
@@ -199,7 +205,10 @@
   /* ---------- Rendering ---------- */
   function setWindowButtonsActive() {
     document.querySelectorAll("#trendWindowRow .chip").forEach(el => {
-      el.classList.toggle("active", el.dataset.window === trendWindowKey);
+      el.classList.toggle("active", el.dataset.window === volumeWindowKey);
+    });
+    document.querySelectorAll("#trendPaceWindowRow .chip").forEach(el => {
+      el.classList.toggle("active", el.dataset.window === paceWindowKey);
     });
   }
 
@@ -422,15 +431,23 @@
 
   function renderTrend() {
     setWindowButtonsActive();
-    const windowInfo = TREND_WINDOWS[trendWindowKey];
+    const volumeWindowInfo = TREND_WINDOWS[volumeWindowKey];
+    const paceWindowInfo = TREND_WINDOWS[paceWindowKey];
     const dailyData = buildDailySeries(filteredRuns());
-    renderVolumePanel(dailyData, windowInfo.days, windowInfo);
-    renderPacePanel(dailyData, windowInfo.days, windowInfo);
+    renderVolumePanel(dailyData, volumeWindowInfo.days, volumeWindowInfo);
+    renderPacePanel(dailyData, paceWindowInfo.days, paceWindowInfo);
   }
 
   document.querySelectorAll("#trendWindowRow .chip").forEach(el => {
     el.addEventListener("click", () => {
-      trendWindowKey = el.dataset.window;
+      volumeWindowKey = el.dataset.window;
+      dirty.trend = true;
+      renderTrend();
+    });
+  });
+  document.querySelectorAll("#trendPaceWindowRow .chip").forEach(el => {
+    el.addEventListener("click", () => {
+      paceWindowKey = el.dataset.window;
       dirty.trend = true;
       renderTrend();
     });

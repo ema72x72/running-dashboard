@@ -146,8 +146,8 @@
     <p class="chartlabel">Smoothing window</p>
     <div class="trend-window-row" id="trendWindowRow">
       <div class="chip" data-window="30d">30 days</div>
-      <div class="chip active" data-window="3m">3 months</div>
-      <div class="chip" data-window="1y">1 year</div>
+      <div class="chip" data-window="3m">3 months</div>
+      <div class="chip active" data-window="1y">1 year</div>
     </div>
 
     <div class="trend-panel">
@@ -169,6 +169,11 @@
         <div>
           <p class="trend-panel-title">Pace (min/km)</p>
           <p class="trend-panel-subtitle" id="trendPaceSubtitle"></p>
+        </div>
+        <div class="trend-window-row trend-window-row--compact" id="trendPaceWindowRow">
+          <div class="chip" data-window="30d">30D</div>
+          <div class="chip" data-window="3m">3M</div>
+          <div class="chip active" data-window="1y">1Y</div>
         </div>
       </div>
       <div class="trend-chart-wrap" id="trendPaceWrap">
@@ -357,6 +362,14 @@
   </section>
 
 </main>
+
+<div class="info-modal-overlay" id="mapListModal">
+  <div class="info-modal-card map-list-modal-card">
+    <p class="info-modal-title" id="mapListModalTitle"></p>
+    <div class="map-list-modal-body" id="mapListModalBody"></div>
+    <button class="info-modal-close" id="mapListModalClose" type="button">Close</button>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>

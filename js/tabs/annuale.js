@@ -34,29 +34,6 @@
     `;
   }
 
-  function linearTrend(values) {
-    const points = values
-      .map((value, index) => ({ x: index, y: Number(value) }))
-      .filter(point => Number.isFinite(point.y));
-    if (points.length < 2) return values.slice();
-    const n = points.length;
-    const sumX = points.reduce((sum, point) => sum + point.x, 0);
-    const sumY = points.reduce((sum, point) => sum + point.y, 0);
-    const sumXY = points.reduce(
-      (sum, point) => sum + point.x * point.y,
-      0
-    );
-    const sumXX = points.reduce(
-      (sum, point) => sum + point.x * point.x,
-      0
-    );
-    const denominator = n * sumXX - sumX * sumX;
-    if (!denominator) return values.slice();
-    const slope = (n * sumXY - sumX * sumY) / denominator;
-    const intercept = (sumY - slope * sumX) / n;
-    return values.map((_, index) => intercept + slope * index);
-  }
-
   function renderAnnuale() {
     const runs = filteredRuns()
       .slice()
@@ -73,7 +50,6 @@
       const count = yearlyRuns[index];
       return count ? yearlyData[index] / count : 0;
     });
-    const trendData = linearTrend(yearlyData);
     const lastSelectedYear = years.length
       ? Math.max(...years)
       : null;
@@ -95,19 +71,6 @@
             borderRadius: 6,
             maxBarThickness: 42,
             order: 2
-          },
-          {
-            type: "line",
-            label: "Trend",
-            data: trendData,
-            borderColor: "#2a78d6",
-            borderWidth: 2,
-            borderDash: [7, 5],
-            pointRadius: 0,
-            pointHoverRadius: 0,
-            fill: false,
-            tension: 0.2,
-            order: 1
           }
         ]
       },
@@ -118,14 +81,7 @@
         },
         plugins: {
           legend: {
-            display: true,
-            position: "top",
-            align: "end",
-            labels: {
-              usePointStyle: true,
-              boxWidth: 9,
-              boxHeight: 9
-            }
+            display: false
           },
           tooltip: {
             displayColors: false,
@@ -135,9 +91,6 @@
                 return String(years[items[0].dataIndex]);
               },
               label: context => {
-                if (context.dataset.label === "Trend") {
-                  return null;
-                }
                 const index = context.dataIndex;
                 return [
                   `${fmtKm(yearlyData[index])} km`,
@@ -279,31 +232,23 @@
 
     upsertChart(
       "chartMonthly",
-      "line",
+      "bar",
       {
         labels: months,
         datasets: [
           {
             label: "Kilometres",
             data: monthlyKm,
-            borderColor: "#2a78d6",
-            backgroundColor: "rgba(42,120,214,0.10)",
-            borderWidth: 2,
-            pointRadius: 2,
-            pointHoverRadius: 6,
-            pointHitRadius: 14,
-            pointBackgroundColor: "#2a78d6",
-            pointHoverBackgroundColor: "#fc4c02",
-            pointHoverBorderColor: "#ffffff",
-            pointHoverBorderWidth: 2,
-            fill: true,
-            tension: 0.25
+            backgroundColor: "#2a78d6",
+            hoverBackgroundColor: "#fc4c02",
+            borderRadius: 3,
+            maxBarThickness: 22
           }
         ]
       },
       {
         interaction: {
-          mode: "nearest",
+          mode: "index",
           intersect: false
         },
         plugins: {

@@ -623,6 +623,14 @@
     "source": "nominatim",
     "state": "Catalonia"
   },
+  "41.852,12.482": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Rome, Roma, Lazio, Italy",
+    "place": "Rome",
+    "source": "nominatim",
+    "state": "Lazio"
+  },
   "41.892,12.438": {
     "country": "Italy",
     "country_code": "it",

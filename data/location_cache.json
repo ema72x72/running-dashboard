@@ -855,6 +855,14 @@
     "source": "nominatim",
     "state": "Emilia-Romagna"
   },
+  "44.072,12.579": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Rimini, Emilia-Romagna, 47921-47924, Italy",
+    "place": "Rimini",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
   "44.074,12.577": {
     "country": "Italy",
     "country_code": "it",

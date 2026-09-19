@@ -607,6 +607,14 @@
     "source": "nominatim",
     "state": "Apulia"
   },
+  "41.213,13.570": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Gaeta, Latina, Lazio, 04024, Italy",
+    "place": "Gaeta",
+    "source": "nominatim",
+    "state": "Lazio"
+  },
   "41.416,2.139": {
     "country": "Spain",
     "country_code": "es",

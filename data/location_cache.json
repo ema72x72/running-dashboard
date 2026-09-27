@@ -1511,6 +1511,14 @@
     "source": "nominatim",
     "state": "Piedmont"
   },
+  "45.162,10.806": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Mantua, Lombardy, 46100, Italy",
+    "place": "Mantua",
+    "source": "nominatim",
+    "state": "Lombardy"
+  },
   "45.694,9.669": {
     "country": "Italy",
     "country_code": "it",

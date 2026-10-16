@@ -711,6 +711,14 @@
     "source": "nominatim",
     "state": "Umbria"
   },
+  "43.106,12.388": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Perugia, Umbria, Italy",
+    "place": "Perugia",
+    "source": "nominatim",
+    "state": "Umbria"
+  },
   "43.180,16.674": {
     "country": "Croatia",
     "country_code": "hr",

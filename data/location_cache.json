@@ -1527,6 +1527,14 @@
     "source": "nominatim",
     "state": "Lombardy"
   },
+  "45.437,10.991": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Verona, Veneto, 37121-37142, Italy",
+    "place": "Verona",
+    "source": "nominatim",
+    "state": "Veneto"
+  },
   "45.694,9.669": {
     "country": "Italy",
     "country_code": "it",

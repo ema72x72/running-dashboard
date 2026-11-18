@@ -775,6 +775,14 @@
     "source": "nominatim",
     "state": "Cantabria"
   },
+  "43.486,-1.556": {
+    "country": "France",
+    "country_code": "fr",
+    "display_name": "Biarritz, Bayonne, Pirenei Atlantici, Nouvelle-Aquitaine, Metropolitan France, 64200, France",
+    "place": "Biarritz",
+    "source": "nominatim",
+    "state": "Nouvelle-Aquitaine"
+  },
   "43.499,-5.263": {
     "country": "Spain",
     "country_code": "es",

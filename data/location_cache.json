@@ -1439,6 +1439,14 @@
     "source": "nominatim",
     "state": "Emilia-Romagna"
   },
+  "44.491,11.349": {
+    "country": "Italy",
+    "country_code": "it",
+    "display_name": "Bologna, Emilia-Romagna, Italy",
+    "place": "Bologna",
+    "source": "nominatim",
+    "state": "Emilia-Romagna"
+  },
   "44.492,11.343": {
     "country": "Italy",
     "country_code": "it",

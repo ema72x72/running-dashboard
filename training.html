@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121211">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Training · Running Dashboard</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.tr-head { padding: calc(0.9rem + env(safe-area-inset-top)) 1rem 0.9rem; }
+.tr-head-inner { max-width: 720px; margin:auto; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.tr-back { color:var(--text-secondary); font-size:13px; text-decoration:none; }
+.tr-back:hover { color:var(--accent); }
+.tr-head-title { font-size:16px; font-weight:650; }
+.tr-main { max-width:720px; padding:22px 16px 50px; }
+.tr-kicker { font-size:11px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:.09em; margin-bottom:7px; }
+.tr-title { font-size:28px; font-weight:750; letter-spacing:-.035em; line-height:1.12; margin:0 0 9px; }
+.tr-sub { font-size:13px; color:var(--text-secondary); line-height:1.5; }
+.tr-hero { margin-bottom:22px; }
+.tr-metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin:18px 0 0; }
+.tr-metric { background:var(--surface-1); padding:13px 11px; border-radius:12px; min-height:82px; }
+.tr-metric-label { font-size:11px; color:var(--text-secondary); }
+.tr-metric-value { margin-top:8px; font-size:21px; font-weight:700; letter-spacing:-.02em; }
+.tr-metric-note { font-size:10px; color:var(--text-muted); margin-top:4px; }
+.tr-section { margin-top:27px; }
+.tr-section-title { font-size:15px; font-weight:700; margin:0 0 5px; }
+.tr-section-intro { font-size:12px; line-height:1.55; color:var(--text-secondary); margin-bottom:13px; }
+.tr-weeks { display:flex; gap:6px; overflow-x:auto; padding:3px 0 12px; -webkit-overflow-scrolling:touch; }
+.tr-week { flex:0 0 49px; min-height:50px; border:1px solid var(--border); background:var(--surface-1); color:var(--text-secondary); border-radius:10px; font:inherit; cursor:pointer; text-align:center; padding:7px 5px; }
+.tr-week strong { display:block; font-size:14px; color:var(--text-primary); }
+.tr-week small { display:block; font-size:10px; margin-top:3px; }
+.tr-week[aria-current="true"] { border:2px solid var(--accent); padding:6px 4px; background:var(--surface-2); }
+.tr-week.tr-past strong { opacity:.7; }
+.tr-selected { padding:16px; border:1px solid var(--border); background:var(--surface-1); border-radius:14px; }
+.tr-week-head { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+.tr-week-heading { font-size:18px; font-weight:700; }
+.tr-week-range { margin-top:4px; font-size:12px; color:var(--text-secondary); }
+.tr-pill { font-size:10px; border-radius:999px; padding:5px 9px; border:1px solid var(--border-strong); white-space:nowrap; color:var(--text-secondary); }
+.tr-pill-confirmed { background:var(--accent); border-color:var(--accent); color:#fff; }
+.tr-week-note { font-size:12px; color:var(--text-secondary); margin-top:13px; line-height:1.55; }
+.tr-volume { margin:15px 0 5px; display:flex; justify-content:space-between; font-size:12px; gap:8px; }
+.tr-track { width:100%; height:7px; border-radius:10px; background:var(--surface-2); overflow:hidden; }
+.tr-track > span { display:block; background:var(--accent); height:100%; border-radius:10px; }
+.tr-volume-note { font-size:11px; margin-top:7px; color:var(--text-muted); line-height:1.45; }
+.tr-sessions { display:grid; gap:10px; margin-top:15px; }
+.tr-session { border:1px solid var(--border); border-radius:12px; background:var(--surface-0); padding:13px 14px; }
+.tr-session-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.tr-date { font-size:11px; color:var(--text-secondary); text-transform:capitalize; }
+.tr-kind { font-size:15px; font-weight:650; margin-top:4px; }
+.tr-distance { font-size:20px; font-weight:750; white-space:nowrap; }
+.tr-detail { font-size:12px; line-height:1.55; margin-top:9px; }
+.tr-guidance { font-size:11px; color:var(--text-secondary); margin-top:6px; line-height:1.5; }
+.tr-found { border-top:1px solid var(--border); margin-top:12px; padding-top:11px; color:var(--accent); font-size:11px; line-height:1.5; }
+.tr-legend { padding:14px; border:1px solid var(--border); border-radius:12px; font-size:12px; color:var(--text-secondary); line-height:1.6; }
+.tr-footer { margin-top:25px; display:flex; flex-wrap:wrap; gap:15px; font-size:12px; }
+.tr-footer a { color:var(--accent); }
+.tr-error { padding:16px; background:var(--surface-1); border:1px solid var(--border); border-radius:12px; font-size:13px; line-height:1.55; }
+.tr-loading { font-size:13px; color:var(--text-secondary); }
+@media(min-width:600px){ .tr-title{font-size:34px} .tr-selected{padding:20px} .tr-sessions{grid-template-columns:repeat(2,minmax(0,1fr))} }
+</style>
+</head>
+<body>
+<header class="tr-head">
+  <div class="tr-head-inner">
+    <a class="tr-back" href="./index.html">← Dashboard</a>
+    <span class="tr-head-title">Training</span>
+    <span aria-hidden="true" style="width:70px"></span>
+  </div>
+</header>
+<main class="tr-main" id="tr-root" aria-live="polite"><p class="tr-loading">Caricamento programma…</p></main>
+<script>
+(function () {
+  "use strict";
+  try {
+    var theme = localStorage.getItem("rd-theme");
+    if (theme === "dark" || theme === "light") document.documentElement.setAttribute("data-theme",theme);
+  } catch (e) { /* Private mode may block storage */ }
+
+  var root=document.getElementById("tr-root");
+  var model=null, runs=[], selected=0;
+  function esc(value) {
+    return String(value === undefined || value === null ? "" : value)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+  function day(dateStr, options) {
+    return new Intl.DateTimeFormat("it-IT",Object.assign({timeZone:"UTC",day:"numeric",month:"short"},options||{}))
+      .format(new Date(dateStr+"T12:00:00Z"));
+  }
+  function formatKm(km) {
+    return Number(km).toLocaleString("it-IT",{maximumFractionDigits:1});
+  }
+  function parseApproxKm(str) {
+    var n = String(str).match(/\d+(?:[.,]\d+)?/);
+    return n ? Number(n[0].replace(",",".")) : 0;
+  }
+  function expectedRange(str) {
+    var a=String(str).match(/\d+(?:[.,]\d+)?/g)||[];
+    var x=a.length?Number(a[0].replace(",",".")):0;
+    var y=a.length>1?Number(a[1].replace(",",".")):x;
+    return {lo:Math.min(x,y),hi:Math.max(x,y)};
+  }
+  function weekGoal(w) {
+    return w.sessions.reduce(function(a,s) {
+      var r=expectedRange(s.distance_km);return a+(r.lo+r.hi)/2;
+    },0);
+  }
+  function matchingRuns(s) {
+    var r=expectedRange(s.distance_km);
+    return runs.filter(function(x) {
+      return x.d===s.date && Number.isFinite(Number(x.km)) &&
+        Number(x.km)>=r.lo*.70 && Number(x.km)<=r.hi*1.35;
+    });
+  }
+  function actualRuns(w) {
+    return runs.filter(function(x) { return x.d>=w.start && x.d<=w.end; });
+  }
+  function nearNowIndex() {
+    var today=new Date().toLocaleDateString("en-CA",{timeZone:"Europe/Rome"});
+    var ix=model.weeks.findIndex(function(w){return today>=w.start && today<=w.end;});
+    if(ix>=0)return ix;
+    if(today<model.weeks[0].start)return 0;
+    return model.weeks.length-1;
+  }
+  function sessionHtml(s) {
+    var matches=matchingRuns(s);
+    var msg="";
+    if(matches.length) {
+      var details=matches.map(function(r) {
+        return esc(formatKm(r.km))+" km · "+esc(formatKm(r.min/r.km))+" min/km";
+      }).join("; ");
+      msg='<div class="tr-found">● Attività Strava compatibile rilevata: '+details+'. Da verificare prima di considerare completata la seduta.</div>';
+    }
+    return '<article class="tr-session"><div class="tr-session-head"><div><div class="tr-date">'+esc(day(s.date,{weekday:"short",day:"numeric",month:"short"}))+'</div><div class="tr-kind">'+esc(s.kind)+'</div></div><div class="tr-distance">'+esc(s.distance_km)+' <span style="font-size:11px;font-weight:500">km</span></div></div><p class="tr-detail">'+esc(s.description)+'</p><p class="tr-guidance">'+esc(s.guidance)+'</p>'+msg+'</article>';
+  }
+  function render() {
+    var weeks=model.weeks,w=weeks[selected];
+    var now=new Date().toLocaleDateString("en-CA",{timeZone:"Europe/Rome"});
+    var goal=weekGoal(w);
+    var recorded=actualRuns(w);
+    var actual=recorded.reduce(function(a,r){return a+Number(r.km||0);},0);
+    var pct=goal?Math.min(100,100*actual/goal):0;
+    var matched=w.sessions.filter(function(s){return matchingRuns(s).length>0;}).length;
+    var pill=w.status==="confirmed"?"Settimana operativa":"Programma indicativo";
+    var html=[];
+    html.push('<section class="tr-hero"><p class="tr-kicker">Road to Bologna · 7 marzo 2027</p>');
+    html.push('<h1 class="tr-title">'+esc(model.title)+'</h1>');
+    html.push('<p class="tr-sub">Tre uscite settimanali, quarta soltanto facoltativa. Lavoro sulla resistenza specifica a '+esc(model.goal.pace_range)+'. Ritmi e volumi aggiornabili dopo ogni revisione.</p>');
+    html.push('<div class="tr-metrics"><div class="tr-metric"><div class="tr-metric-label">Settimana selezionata</div><div class="tr-metric-value">'+w.number+' / '+weeks.length+'</div><div class="tr-metric-note">'+esc(w.phase)+'</div></div>');
+    html.push('<div class="tr-metric"><div class="tr-metric-label">Obiettivo tempo</div><div class="tr-metric-value" style="font-size:17px">'+esc(model.goal.time_range)+'</div><div class="tr-metric-note">Provvisorio</div></div>');
+    html.push('<div class="tr-metric"><div class="tr-metric-label">Corse compatibili</div><div class="tr-metric-value">'+matched+' / '+w.sessions.length+'</div><div class="tr-metric-note">Non confermate</div></div></div></section>');
+    html.push('<section class="tr-section"><h2 class="tr-section-title">Le 15 settimane</h2><p class="tr-section-intro">Seleziona una settimana. Le date future sono orientative, non appuntamenti già fissati in agenda.</p><nav class="tr-weeks" aria-label="Seleziona settimana">');
+    weeks.forEach(function(z,i){
+      var past=now>z.end?" tr-past":"";
+      html.push('<button type="button" class="tr-week'+past+'" data-week="'+i+'" aria-current="'+(i===selected)+'"><strong>'+z.number+'</strong><small>'+esc(day(z.start,{day:"numeric",month:"short"}))+'</small></button>');
+    });
+    html.push('</nav></section>');
+    html.push('<section class="tr-section"><div class="tr-selected"><div class="tr-week-head"><div><div class="tr-week-heading">Settimana '+w.number+' · '+esc(w.phase)+'</div><div class="tr-week-range">'+esc(day(w.start,{day:"numeric",month:"short"}))+' – '+esc(day(w.end,{day:"numeric",month:"short",year:"numeric"}))+'</div></div><span class="tr-pill '+(w.status==="confirmed"?"tr-pill-confirmed":"")+'">'+esc(pill)+'</span></div>');
+    if(w.note)html.push('<p class="tr-week-note">'+esc(w.note)+'</p>');
+    html.push('<div class="tr-volume"><span>Strava: <strong>'+esc(formatKm(actual))+' km</strong> · '+recorded.length+' corse</span><span>Previsti: <strong>~'+esc(formatKm(goal))+' km</strong></span></div><div class="tr-track"><span style="width:'+pct.toFixed(1)+'%"></span></div>');
+    html.push('<p class="tr-volume-note">I chilometri registrati includono tutte le corse della settimana; non attestano l’esecuzione delle singole sedute. Non recuperare il volume perso.</p>');
+    html.push('<div class="tr-sessions">'+w.sessions.map(sessionHtml).join("")+'</div></div></section>');
+    html.push('<section class="tr-section"><h2 class="tr-section-title">Come interpretare il piano</h2><div class="tr-legend"><strong>Settimana operativa</strong>: sedute indicate come riferimento per la settimana imminente, da adattare se cambia il recupero.<br><strong>Programma indicativo</strong>: progressione di riferimento, non allenamenti definitivi.<br><strong>Strava</strong>: la pagina propone corrispondenze, ma non marca automaticamente le sedute come completate. La quarta corsa resta sempre facoltativa.<br><strong>Outlook</strong>: non ancora sincronizzato; gli orari vanno confermati prima di creare appuntamenti.</div></section>');
+    html.push('<footer class="tr-footer"><a href="index.html">← Dashboard attività</a><a href="docs/memo-bologna-2027.md">Memo di preparazione</a></footer>');
+    root.innerHTML=html.join("");
+    root.querySelectorAll("[data-week]").forEach(function(btn){
+      btn.addEventListener("click",function(){
+        selected=Number(btn.getAttribute("data-week"));
+        render();
+        var nav=root.querySelector(".tr-week[aria-current='true']");
+        if(nav)nav.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
+      });
+    });
+  }
+  Promise.all([
+    fetch("data/training-plan.json",{cache:"no-store"}).then(function(r){if(!r.ok)throw Error("Piano non disponibile");return r.json();}),
+    fetch("data/runs.json",{cache:"no-store"}).then(function(r){if(!r.ok)throw Error("Archivio Strava non disponibile");return r.json();})
+  ]).then(function(values){
+    model=values[0];runs=Array.isArray(values[1])?values[1]:[];
+    if(!model || !Array.isArray(model.weeks) || !model.weeks.length)throw Error("Formato del piano non valido");
+    selected=nearNowIndex();render();
+  }).catch(function(err){
+    root.innerHTML='<div class="tr-error"><strong>Impossibile caricare il programma.</strong><p style="margin-top:6px">'+esc(err.message)+'</p><p style="margin-top:8px">Riprova ad aggiornare la pagina. Se il problema persiste, controlla i file JSON del repository.</p></div>';
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,577 @@
+{
+  "schema_version": 1,
+  "plan_id": "bologna-half-2027",
+  "updated_at": "2026-11-22",
+  "source_memo": "docs/memo-bologna-2027.md",
+  "title": "Bologna Half Marathon 2027",
+  "race": {
+    "date": "2027-03-07",
+    "distance_km": 21.0975
+  },
+  "goal": {
+    "time_range": "1h54′–1h56′",
+    "pace_range": "5′25″–5′30″/km",
+    "status": "provisional"
+  },
+  "policy": {
+    "runs_per_week": 3,
+    "optional_fourth": "5–6 km easy only if recovered",
+    "confirmed_horizon": "Only week 1 is currently operational; later weeks require weekly review.",
+    "calendar_integration": false,
+    "activity_matching": "Suggestions only; never automatically mark planned sessions as completed."
+  },
+  "notes": [
+    "Respect recovery from Verona and current generalized fatigue.",
+    "Tennis normally Thursday; Friday volleyball may require skipping the easy run.",
+    "Future dates and target paces are provisional. Weekly workload and sessions will be revised after run analysis.",
+    "For >90 minute long runs, practise fueling and hydration."
+  ],
+  "weeks": [
+    {
+      "number": 1,
+      "start": "2026-11-23",
+      "end": "2026-11-29",
+      "phase": "Recupero",
+      "status": "confirmed",
+      "note": "Settimana eccezionale di recupero post-Verona: due uscite soltanto. Pallavolo il 24 e 27 novembre.",
+      "sessions": [
+        {
+          "id": "bologna27-w01-s1",
+          "date": "2026-11-25",
+          "kind": "Facile",
+          "distance_km": "6–7",
+          "description": "Facile, solo se la stanchezza generale è diminuita.",
+          "guidance": "Sforzo basso; niente accelerazioni.",
+          "status": "confirmed"
+        },
+        {
+          "id": "bologna27-w01-s2",
+          "date": "2026-11-29",
+          "kind": "Lungo facile",
+          "distance_km": "10–12",
+          "description": "Senza progressioni finali; accorciare se affaticato dalla pallavolo.",
+          "guidance": "Sforzo basso, percorso regolare.",
+          "status": "confirmed"
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "start": "2026-11-30",
+      "end": "2026-12-06",
+      "phase": "Costruzione",
+      "status": "provisional",
+      "note": "",
+      "sessions": [
+        {
+          "id": "bologna27-w02-s1",
+          "date": "2026-12-01",
+          "kind": "Medio controllato",
+          "distance_km": "9",
+          "description": "3×6 minuti a intensità media, 3 minuti facili tra i blocchi.",
+          "guidance": "Riscaldamento e defaticamento compresi.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w02-s2",
+          "date": "2026-12-04",
+          "kind": "Facile",
+          "distance_km": "7",
+          "description": "Corsa molto facile.",
+          "guidance": "Sforzo 3–4/10.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w02-s3",
+          "date": "2026-12-06",
+          "kind": "Lungo facile",
+          "distance_km": "13",
+          "description": "Regolare e senza accelerazioni.",
+          "guidance": "Comfort respiratorio.",
+          "status": "provisional"
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "start": "2026-12-07",
+      "end": "2026-12-13",
+      "phase": "Costruzione",
+      "status": "provisional",
+      "note": "",
+      "sessions": [
+        {
+          "id": "bologna27-w03-s1",
+          "date": "2026-12-08",
+          "kind": "Medio controllato",
+          "distance_km": "9",
+          "description": "2×10 minuti a intensità media.",
+          "guidance": "Riscaldamento, recupero e defaticamento.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w03-s2",
+          "date": "2026-12-11",
+          "kind": "Facile",
+          "distance_km": "7",
+          "description": "Corsa facile.",
+          "guidance": "Sforzo 3–4/10.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w03-s3",
+          "date": "2026-12-13",
+          "kind": "Lungo facile",
+          "distance_km": "14–15",
+          "description": "Fondo facile.",
+          "guidance": "Nessuna progressione obbligatoria.",
+          "status": "provisional"
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "start": "2026-12-14",
+      "end": "2026-12-20",
+      "phase": "Scarico",
+      "status": "provisional",
+      "note": "",
+      "sessions": [
+        {
+          "id": "bologna27-w04-s1",
+          "date": "2026-12-15",
+          "kind": "Medio controllato",
+          "distance_km": "8",
+          "description": "20 minuti di medio a intensità controllata.",
+          "guidance": "Nessuna forzatura.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w04-s2",
+          "date": "2026-12-18",
+          "kind": "Facile",
+          "distance_km": "6",
+          "description": "Corsa facile.",
+          "guidance": "Recupero.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w04-s3",
+          "date": "2026-12-20",
+          "kind": "Lungo facile",
+          "distance_km": "12",
+          "description": "Lungo ridotto.",
+          "guidance": "Ritmo conversazionale.",
+          "status": "provisional"
+        }
+      ]
+    },
+    {
+      "number": 5,
+      "start": "2026-12-21",
+      "end": "2026-12-27",
+      "phase": "Costruzione",
+      "status": "provisional",
+      "note": "",
+      "sessions": [
+        {
+          "id": "bologna27-w05-s1",
+          "date": "2026-12-22",
+          "kind": "Medio controllato",
+          "distance_km": "9",
+          "description": "3×10 minuti di medio controllato.",
+          "guidance": "Recuperi facili.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w05-s2",
+          "date": "2026-12-25",
+          "kind": "Facile",
+          "distance_km": "8",
+          "description": "Corsa facile.",
+          "guidance": "Sforzo 3–4/10.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w05-s3",
+          "date": "2026-12-27",
+          "kind": "Lungo facile",
+          "distance_km": "15",
+          "description": "Resistenza aerobica.",
+          "guidance": "Rifornimento se necessario.",
+          "status": "provisional"
+        }
+      ]
+    },
+    {
+      "number": 6,
+      "start": "2026-12-28",
+      "end": "2027-01-03",
+      "phase": "Costruzione",
+      "status": "provisional",
+      "note": "",
+      "sessions": [
+        {
+          "id": "bologna27-w06-s1",
+          "date": "2026-12-29",
+          "kind": "Medio controllato",
+          "distance_km": "10",
+          "description": "30–35 minuti complessivi a intensità media.",
+          "guidance": "Continuo o frazionato secondo recupero.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w06-s2",
+          "date": "2027-01-01",
+          "kind": "Facile",
+          "distance_km": "8",
+          "description": "Corsa facile.",
+          "guidance": "Sforzo 3–4/10.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w06-s3",
+          "date": "2027-01-03",
+          "kind": "Lungo progressivo",
+          "distance_km": "16",
+          "description": "Ultimi 3 km gradualmente più veloci, senza raggiungere lo sforzo gara.",
+          "guidance": "Non forzare in salita.",
+          "status": "provisional"
+        }
+      ]
+    },
+    {
+      "number": 7,
+      "start": "2027-01-04",
+      "end": "2027-01-10",
+      "phase": "Test / scarico",
+      "status": "provisional",
+      "note": "",
+      "sessions": [
+        {
+          "id": "bologna27-w07-s1",
+          "date": "2027-01-05",
+          "kind": "Test controllato",
+          "distance_km": "9",
+          "description": "Test di efficienza a ritmo costante, dopo riscaldamento.",
+          "guidance": "Confrontare FC, passo, quota, meteo e RPE.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w07-s2",
+          "date": "2027-01-08",
+          "kind": "Facile",
+          "distance_km": "7",
+          "description": "Corsa facile.",
+          "guidance": "Recupero.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w07-s3",
+          "date": "2027-01-10",
+          "kind": "Lungo facile",
+          "distance_km": "13",
+          "description": "Lungo ridotto.",
+          "guidance": "Ritmo conversazionale.",
+          "status": "provisional"
+        }
+      ]
+    },
+    {
+      "number": 8,
+      "start": "2027-01-11",
+      "end": "2027-01-17",
+      "phase": "Resistenza specifica",
+      "status": "provisional",
+      "note": "",
+      "sessions": [
+        {
+          "id": "bologna27-w08-s1",
+          "date": "2027-01-12",
+          "kind": "Medio prolungato",
+          "distance_km": "10",
+          "description": "2×18 minuti di medio controllato.",
+          "guidance": "Recupero facile tra i blocchi.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w08-s2",
+          "date": "2027-01-15",
+          "kind": "Facile",
+          "distance_km": "8",
+          "description": "Corsa facile.",
+          "guidance": "Sforzo 3–4/10.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w08-s3",
+          "date": "2027-01-17",
+          "kind": "Lungo facile",
+          "distance_km": "17",
+          "description": "Fondo regolare.",
+          "guidance": "Carboidrati e idratazione da provare.",
+          "status": "provisional"
+        }
+      ]
+    },
+    {
+      "number": 9,
+      "start": "2027-01-18",
+      "end": "2027-01-24",
+      "phase": "Scarico / agenda",
+      "status": "provisional",
+      "note": "Settimana lavorativa impegnativa e pallavolo il 19 gennaio: mantenere flessibilità.",
+      "sessions": [
+        {
+          "id": "bologna27-w09-s1",
+          "date": "2027-01-19",
+          "kind": "Controllato",
+          "distance_km": "9",
+          "description": "Seduta moderata, evitare carico elevato.",
+          "guidance": "Adattare alla settimana lavorativa.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w09-s2",
+          "date": "2027-01-22",
+          "kind": "Facile",
+          "distance_km": "7",
+          "description": "Corsa facile.",
+          "guidance": "Sforzo 3–4/10.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w09-s3",
+          "date": "2027-01-24",
+          "kind": "Lungo facile",
+          "distance_km": "14",
+          "description": "Lungo ridotto.",
+          "guidance": "Recupero prioritario.",
+          "status": "provisional"
+        }
+      ]
+    },
+    {
+      "number": 10,
+      "start": "2027-01-25",
+      "end": "2027-01-31",
+      "phase": "Specifico",
+      "status": "provisional",
+      "note": "",
+      "sessions": [
+        {
+          "id": "bologna27-w10-s1",
+          "date": "2027-01-26",
+          "kind": "Ripetute lunghe",
+          "distance_km": "11",
+          "description": "3×2 km intorno a 5′30″–5′35″/km, solo se i test lo confermano.",
+          "guidance": "Recuperi facili, riscaldamento e defaticamento.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w10-s2",
+          "date": "2027-01-29",
+          "kind": "Facile",
+          "distance_km": "8",
+          "description": "Corsa facile.",
+          "guidance": "Ridurre se pallavolo intensa.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w10-s3",
+          "date": "2027-01-31",
+          "kind": "Lungo progressivo",
+          "distance_km": "18",
+          "description": "Ultimi 4 km progressivi.",
+          "guidance": "Da adattare al recupero.",
+          "status": "provisional"
+        }
+      ]
+    },
+    {
+      "number": 11,
+      "start": "2027-02-01",
+      "end": "2027-02-07",
+      "phase": "Specifico",
+      "status": "provisional",
+      "note": "",
+      "sessions": [
+        {
+          "id": "bologna27-w11-s1",
+          "date": "2027-02-02",
+          "kind": "Ripetute lunghe",
+          "distance_km": "10",
+          "description": "2×3 km intorno a 5′30″–5′35″/km, se sostenibile.",
+          "guidance": "Riscaldamento e defaticamento.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w11-s2",
+          "date": "2027-02-05",
+          "kind": "Facile",
+          "distance_km": "8",
+          "description": "Corsa facile.",
+          "guidance": "Pallavolo prevista la sera: eventualmente accorciare.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w11-s3",
+          "date": "2027-02-07",
+          "kind": "Lungo facile",
+          "distance_km": "18",
+          "description": "Lungo aerobico.",
+          "guidance": "Provare rifornimento e scarpe gara.",
+          "status": "provisional"
+        }
+      ]
+    },
+    {
+      "number": 12,
+      "start": "2027-02-08",
+      "end": "2027-02-14",
+      "phase": "Scarico",
+      "status": "provisional",
+      "note": "",
+      "sessions": [
+        {
+          "id": "bologna27-w12-s1",
+          "date": "2027-02-09",
+          "kind": "Medio controllato",
+          "distance_km": "9",
+          "description": "25 minuti di medio.",
+          "guidance": "Non massimale.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w12-s2",
+          "date": "2027-02-12",
+          "kind": "Facile",
+          "distance_km": "7",
+          "description": "Corsa facile.",
+          "guidance": "Sforzo 3–4/10.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w12-s3",
+          "date": "2027-02-14",
+          "kind": "Lungo facile",
+          "distance_km": "15",
+          "description": "Riduzione del carico.",
+          "guidance": "Adattare agli impegni familiari.",
+          "status": "provisional"
+        }
+      ]
+    },
+    {
+      "number": 13,
+      "start": "2027-02-15",
+      "end": "2027-02-21",
+      "phase": "Picco specifico",
+      "status": "provisional",
+      "note": "",
+      "sessions": [
+        {
+          "id": "bologna27-w13-s1",
+          "date": "2027-02-16",
+          "kind": "Ritmo gara",
+          "distance_km": "11",
+          "description": "2×3 km a ritmo mezza previsto, soltanto se confermato dai test.",
+          "guidance": "Riscaldamento, recuperi e defaticamento.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w13-s2",
+          "date": "2027-02-19",
+          "kind": "Facile",
+          "distance_km": "7",
+          "description": "Corsa facile.",
+          "guidance": "Sforzo 3–4/10.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w13-s3",
+          "date": "2027-02-21",
+          "kind": "Lungo specifico",
+          "distance_km": "19–20",
+          "description": "6–7 km totali vicini al ritmo mezza, frazionati.",
+          "guidance": "Ultimo lungo di maggiore carico.",
+          "status": "provisional"
+        }
+      ]
+    },
+    {
+      "number": 14,
+      "start": "2027-02-22",
+      "end": "2027-02-28",
+      "phase": "Taper",
+      "status": "provisional",
+      "note": "Pallavolo il 26 febbraio: limitare sollecitazioni per arrivare riposato.",
+      "sessions": [
+        {
+          "id": "bologna27-w14-s1",
+          "date": "2027-02-23",
+          "kind": "Richiamo ritmo gara",
+          "distance_km": "9",
+          "description": "3×1 km a ritmo mezza, controllo dello sforzo.",
+          "guidance": "Non ricercare la fatica.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w14-s2",
+          "date": "2027-02-26",
+          "kind": "Facile",
+          "distance_km": "7",
+          "description": "Corsa facile o riposo in base a recupero.",
+          "guidance": "Attenzione alla pallavolo serale.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w14-s3",
+          "date": "2027-02-28",
+          "kind": "Lungo ridotto",
+          "distance_km": "13–14",
+          "description": "Breve porzione a ritmo gara soltanto se tutto procede bene.",
+          "guidance": "Carico in riduzione.",
+          "status": "provisional"
+        }
+      ]
+    },
+    {
+      "number": 15,
+      "start": "2027-03-01",
+      "end": "2027-03-07",
+      "phase": "Gara",
+      "status": "provisional",
+      "note": "Evitare la partita di pallavolo del 5 marzo, due giorni prima della mezza.",
+      "sessions": [
+        {
+          "id": "bologna27-w15-s1",
+          "date": "2027-03-02",
+          "kind": "Richiamo",
+          "distance_km": "7",
+          "description": "Brevi tratti a ritmo gara, senza accumulare fatica.",
+          "guidance": "Seduta breve.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w15-s2",
+          "date": "2027-03-05",
+          "kind": "Facile / facoltativo",
+          "distance_km": "4–5",
+          "description": "Attivazione leggera oppure riposo.",
+          "guidance": "Niente pallavolo intensa.",
+          "status": "provisional"
+        },
+        {
+          "id": "bologna27-w15-s3",
+          "date": "2027-03-07",
+          "kind": "Mezza maratona di Bologna",
+          "distance_km": "21,0975",
+          "description": "Gara: gestire il ritmo nei primi chilometri e valutare lo sforzo dopo il quindicesimo.",
+          "guidance": "Obiettivo provvisorio 1h54′–1h56′.",
+          "status": "provisional"
+        }
+      ]
+    }
+  ]
+}

@@ -51,3 +51,11 @@ Single-page running dashboard (`index.html`) backed by data synced from Strava.
 Around 60 historical runs have no matching Strava activity and no local
 `.tcx` export either, so they have no GPS track and no `id`. They still show
 up in the "Runs" tab with their basic stats (distance, time, heart rate).
+
+## Bologna 2027 training plan
+
+- `training.html` — lightweight, read-only preparation view linked from the main dashboard navigation.
+- `data/training-plan.json` — source of truth for the 15-week outline and currently operational workouts. Only week 1 is operational initially; later weeks remain provisional and should be revised after recovery/training review.
+- `data/runs.json` — existing Strava sync, read by the training page to show weekly actual distance and *possible* same-day matches (not automatic workout completion).
+- Outlook integration is deliberately not active. Future scheduling should occur only after confirming real appointment times and workout dates.
+

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "plan_id": "bologna-half-2027",
-  "updated_at": "2026-11-22",
+  "updated_at": "2026-11-23",
   "source_memo": "docs/memo-bologna-2027.md",
   "title": "Bologna Half Marathon 2027",
   "race": {
@@ -37,12 +37,15 @@
       "sessions": [
         {
           "id": "bologna27-w01-s1",
-          "date": "2026-11-25",
+          "date": "2026-11-24",
           "kind": "Facile",
           "distance_km": "6–7",
           "description": "Facile, solo se la stanchezza generale è diminuita.",
           "guidance": "Sforzo basso; niente accelerazioni.",
-          "status": "confirmed"
+          "status": "confirmed",
+          "scheduled_time_local": "09:00",
+          "scheduled_end_local": "09:50",
+          "schedule_note": "Spostato dal 25 al 24 novembre per meteo; pallavolo prevista la sera. Recupero e sensazioni prevalgono sul programma."
         },
         {
           "id": "bologna27-w01-s2",
@@ -51,7 +54,9 @@
           "distance_km": "10–12",
           "description": "Senza progressioni finali; accorciare se affaticato dalla pallavolo.",
           "guidance": "Sforzo basso, percorso regolare.",
-          "status": "confirmed"
+          "status": "confirmed",
+          "scheduled_time_local": "09:00",
+          "scheduled_end_local": "10:20"
         }
       ]
     },
